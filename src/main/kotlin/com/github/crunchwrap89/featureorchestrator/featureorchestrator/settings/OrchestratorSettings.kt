@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings
 
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service

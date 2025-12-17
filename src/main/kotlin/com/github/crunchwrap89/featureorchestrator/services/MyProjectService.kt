@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin.services
+package com.github.crunchwrap89.featureorchestrator.services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger

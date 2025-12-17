@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin
+package com.github.crunchwrap89.featureorchestrator
 
 import com.intellij.ide.highlighter.XmlFileType
 import com.intellij.openapi.components.service
@@ -6,7 +6,7 @@ import com.intellij.psi.xml.XmlFile
 import com.intellij.testFramework.TestDataPath
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.PsiErrorElementUtil
-import com.github.crunchwrap89.awebstormplugin.services.MyProjectService
+import com.github.crunchwrap89.featureorchestrator.services.MyProjectService
 
 @TestDataPath("\$CONTENT_ROOT/src/test/testData")
 class MyPluginTest : BasePlatformTestCase() {

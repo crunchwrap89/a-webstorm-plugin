@@ -1,6 +1,6 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.backlog
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.backlog
 
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.*
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.*
 import com.intellij.openapi.diagnostic.Logger
 
 object BacklogParser {

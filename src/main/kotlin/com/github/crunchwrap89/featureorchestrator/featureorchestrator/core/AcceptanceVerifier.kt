@@ -1,7 +1,7 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.core
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.core
 
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.AcceptanceCriterion
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.OrchestratorSettings
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.application.runReadAction

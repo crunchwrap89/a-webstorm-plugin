@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin
+package com.github.crunchwrap89.featureorchestrator
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.NonNls

@@ -1,8 +1,8 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.backlog
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.backlog
 
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.Backlog
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.BacklogFeature
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.CompletionBehavior
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Backlog
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.CompletionBehavior
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.Logger

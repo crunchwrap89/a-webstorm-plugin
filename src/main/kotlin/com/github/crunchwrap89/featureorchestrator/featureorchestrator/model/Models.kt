@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.model
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.model
 
 import com.intellij.openapi.vfs.VirtualFile
 

@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin.toolWindow
+package com.github.crunchwrap89.featureorchestrator.toolWindow
 
 import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.thisLogger
@@ -8,8 +8,8 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
-import com.github.crunchwrap89.awebstormplugin.MyBundle
-import com.github.crunchwrap89.awebstormplugin.services.MyProjectService
+import com.github.crunchwrap89.featureorchestrator.MyBundle
+import com.github.crunchwrap89.featureorchestrator.services.MyProjectService
 import javax.swing.JButton
 
 

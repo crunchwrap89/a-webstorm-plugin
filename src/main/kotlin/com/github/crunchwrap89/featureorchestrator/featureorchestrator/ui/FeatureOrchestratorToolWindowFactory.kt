@@ -1,8 +1,8 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.ui
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.ui
 
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.core.OrchestratorController
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.BacklogFeature
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.OrchestratorState
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.core.OrchestratorController
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory

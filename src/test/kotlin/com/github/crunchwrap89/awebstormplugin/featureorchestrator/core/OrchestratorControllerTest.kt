@@ -1,9 +1,9 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.core
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.core
 
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.BacklogFeature
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.OrchestratorState
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.CompletionBehavior
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.OrchestratorSettings
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.CompletionBehavior
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
 import com.intellij.openapi.components.service
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ui.UIUtil

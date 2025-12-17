@@ -1,4 +1,4 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.backlog
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.backlog
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -1,8 +1,8 @@
-package com.github.crunchwrap89.awebstormplugin.featureorchestrator.core
+package com.github.crunchwrap89.featureorchestrator.featureorchestrator.core
 
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.AcceptanceCriterion
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.BacklogFeature
-import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.Section
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Section
 
 object PromptGenerator {
     fun generate(feature: BacklogFeature): String {
