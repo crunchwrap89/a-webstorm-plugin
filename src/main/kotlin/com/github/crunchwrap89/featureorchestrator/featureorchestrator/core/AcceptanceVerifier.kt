@@ -12,7 +12,16 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.util.EnvironmentUtil
 import java.io.File
 
-data class VerificationResult(val success: Boolean, val details: List<String>)
+data class VerificationResult(
+    val success: Boolean,
+    val details: List<String>,
+    val failures: List<FailureDetail> = emptyList()
+)
+
+data class FailureDetail(
+    val criterion: AcceptanceCriterion,
+    val message: String
+)
 
 object AcceptanceVerifier {
     fun verify(project: Project, criteria: List<AcceptanceCriterion>): VerificationResult {
@@ -20,6 +29,7 @@ object AcceptanceVerifier {
         val settings = project.service<OrchestratorSettings>()
         val timeoutMs = settings.commandTimeoutSeconds * 1000
         val details = mutableListOf<String>()
+        val failures = mutableListOf<FailureDetail>()
         var allOk = true
         criteria.forEach { c ->
             when (c) {
@@ -41,7 +51,13 @@ object AcceptanceVerifier {
                         }
                     }
 
-                    details += (if (exists) "✔ File exists: ${c.relativePath}" else "✘ File missing: ${c.relativePath}")
+                    if (exists) {
+                        details += "✔ File exists: ${c.relativePath}"
+                    } else {
+                        val msg = "✘ File missing: ${c.relativePath}"
+                        details += msg
+                        failures += FailureDetail(c, msg)
+                    }
                     allOk = allOk && exists
                 }
                 is AcceptanceCriterion.CommandSucceeds -> {
@@ -83,13 +99,14 @@ object AcceptanceVerifier {
                             output.stderr.contains("command not found", ignoreCase = true)) {
                             sb.append("\n\nHINT: You may need to run 'npm install' or 'yarn install' in your project.")
                         }
+                        failures += FailureDetail(c, sb.toString())
                     }
                     details += sb.toString()
                     allOk = allOk && ok
                 }
             }
         }
-        return VerificationResult(allOk, details)
+        return VerificationResult(allOk, details, failures)
     }
 
     private fun isWindows(): Boolean = System.getProperty("os.name").lowercase().contains("win")

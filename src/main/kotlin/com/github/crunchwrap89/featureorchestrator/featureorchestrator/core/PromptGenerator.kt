@@ -42,4 +42,24 @@ object PromptGenerator {
         sb.appendLine("- Validation is not needed for now.")
         return sb.toString().trimEnd()
     }
+
+    fun generateFailurePrompt(feature: BacklogFeature, failures: List<FailureDetail>): String {
+        val sb = StringBuilder()
+        sb.appendLine("The implementation of feature '${feature.name}' failed verification.")
+        sb.appendLine()
+        sb.appendLine("The following acceptance criteria failed:")
+        failures.forEach { f ->
+            sb.appendLine("- Criterion: ${describe(f.criterion)}")
+            sb.appendLine("  Error Details:")
+            sb.appendLine(f.message.prependIndent("    "))
+            sb.appendLine()
+        }
+        sb.appendLine("Please fix the implementation to satisfy these criteria.")
+        return sb.toString()
+    }
+
+    private fun describe(c: AcceptanceCriterion): String = when (c) {
+        is AcceptanceCriterion.FileExists -> "File exists: ${c.relativePath}"
+        is AcceptanceCriterion.CommandSucceeds -> "Command succeeds: ${c.command}"
+    }
 }

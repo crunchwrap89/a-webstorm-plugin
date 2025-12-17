@@ -124,7 +124,8 @@ class OrchestratorController(private val project: Project, private val listener:
         setState(OrchestratorState.HANDOFF)
         startMonitoring(feature)
         setState(OrchestratorState.RUNNING)
-        info("Monitoring file changes. Run your AI now.")
+        info("Prompt ready to be pasted to your AI Agent of choice.")
+        info("Run validate implementation when your AI Agent is completed.")
     }
 
     fun verifyNow() {
@@ -142,7 +143,20 @@ class OrchestratorController(private val project: Project, private val listener:
                     val result = AcceptanceVerifier.verify(project, s.feature.acceptanceCriteria)
                     ApplicationManager.getApplication().invokeLater {
                         result.details.forEach { log(it) }
-                        if (result.success) completeSuccess() else setFailed("One or more criteria failed.")
+                        if (result.success) {
+                            completeSuccess()
+                        } else {
+                            val prompt = PromptGenerator.generateFailurePrompt(s.feature, result.failures)
+                            listener.onPromptGenerated(prompt)
+                            if (settings.copyPromptToClipboard) {
+                                CopyPasteManager.getInstance().setContents(StringSelection(prompt))
+                                log("Failure prompt copied to clipboard.")
+                            }
+                            if (settings.showNotificationAfterHandoff) {
+                                Messages.showInfoMessage(project, "Verification failed. Failure prompt prepared. Paste it into your AI tool to fix the issues.", "Feature Orchestrator")
+                            }
+                            setFailed("One or more criteria failed.")
+                        }
                     }
                 } catch (e: Exception) {
                     ApplicationManager.getApplication().invokeLater {
