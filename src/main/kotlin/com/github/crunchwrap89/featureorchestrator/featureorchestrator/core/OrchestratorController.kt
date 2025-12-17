@@ -123,9 +123,9 @@ class OrchestratorController(private val project: Project, private val listener:
         }
         setState(OrchestratorState.HANDOFF)
         startMonitoring(feature)
-        setState(OrchestratorState.RUNNING)
+        setState(OrchestratorState.AWAITING_AI)
         info("Prompt ready to be pasted to your AI Agent of choice.")
-        info("Run validate implementation when your AI Agent is completed.")
+        info("Verify implementation when your AI Agent is completed.")
     }
 
     fun verifyNow() {
@@ -140,12 +140,15 @@ class OrchestratorController(private val project: Project, private val listener:
         ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Verifying Feature", true) {
             override fun run(indicator: ProgressIndicator) {
                 try {
+                    ApplicationManager.getApplication().invokeLater { info("Validating implementation...") }
                     val result = AcceptanceVerifier.verify(project, s.feature.acceptanceCriteria)
                     ApplicationManager.getApplication().invokeLater {
                         result.details.forEach { log(it) }
                         if (result.success) {
+                            info("Validation successfully completed.")
                             completeSuccess()
                         } else {
+                            info("Validation failed.")
                             val prompt = PromptGenerator.generateFailurePrompt(s.feature, result.failures)
                             listener.onPromptGenerated(prompt)
                             if (settings.copyPromptToClipboard) {
@@ -155,7 +158,8 @@ class OrchestratorController(private val project: Project, private val listener:
                             if (settings.showNotificationAfterHandoff) {
                                 Messages.showInfoMessage(project, "Verification failed. Failure prompt prepared. Paste it into your AI tool to fix the issues.", "Feature Orchestrator")
                             }
-                            setFailed("One or more criteria failed.")
+                            setState(OrchestratorState.AWAITING_AI)
+                            info("Paste the failure prompt to your AI Agent and re-validate when it has finished.")
                         }
                     }
                 } catch (e: Exception) {

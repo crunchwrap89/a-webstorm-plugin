@@ -100,16 +100,20 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
     // Listener implementation
     override fun onStateChanged(state: OrchestratorState) {
-        statusLabel.text = "Status: ${state.name.lowercase().replaceFirstChar { it.titlecase() }}"
+        val statusText = when (state) {
+            OrchestratorState.AWAITING_AI -> "Awaiting AI Agent"
+            else -> state.name.lowercase().replaceFirstChar { it.titlecase() }
+        }
+        statusLabel.text = "Status: $statusText"
         when (state) {
             OrchestratorState.IDLE -> statusIndicator.foreground = JBColor.GRAY
             OrchestratorState.HANDOFF -> statusIndicator.foreground = JBColor(0xFFA500, 0xFFA500)
-            OrchestratorState.RUNNING -> statusIndicator.foreground = JBColor.BLUE
+            OrchestratorState.AWAITING_AI -> statusIndicator.foreground = JBColor.BLUE
             OrchestratorState.VERIFYING -> statusIndicator.foreground = JBColor(0x6A0DAD, 0x6A0DAD)
             OrchestratorState.COMPLETED -> statusIndicator.foreground = JBColor.GREEN
             OrchestratorState.FAILED -> statusIndicator.foreground = JBColor.RED
         }
-        verifyButton.isEnabled = (state == OrchestratorState.RUNNING || state == OrchestratorState.HANDOFF || state == OrchestratorState.FAILED)
+        verifyButton.isEnabled = (state == OrchestratorState.AWAITING_AI || state == OrchestratorState.HANDOFF || state == OrchestratorState.FAILED)
         runButton.isEnabled = (state == OrchestratorState.IDLE || state == OrchestratorState.FAILED || state == OrchestratorState.COMPLETED)
     }
 

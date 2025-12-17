@@ -28,7 +28,7 @@ sealed interface AcceptanceCriterion {
 }
 
 enum class OrchestratorState {
-    IDLE, HANDOFF, RUNNING, VERIFYING, COMPLETED, FAILED
+    IDLE, HANDOFF, AWAITING_AI, VERIFYING, COMPLETED, FAILED
 }
 
 enum class BacklogStatus {

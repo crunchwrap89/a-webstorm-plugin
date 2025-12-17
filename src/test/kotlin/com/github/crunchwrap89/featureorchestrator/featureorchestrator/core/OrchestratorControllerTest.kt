@@ -56,12 +56,12 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
 
         // Run next feature
         controller.runNextFeature()
-        assertEquals(OrchestratorState.RUNNING, lastState.get())
+        assertEquals(OrchestratorState.AWAITING_AI, lastState.get())
 
         // Verify - should fail because test.txt does not exist
         controller.verifyNow()
-        waitForState(OrchestratorState.FAILED)
-        assertEquals(OrchestratorState.FAILED, lastState.get())
+        waitForState(OrchestratorState.AWAITING_AI)
+        assertEquals(OrchestratorState.AWAITING_AI, lastState.get())
 
         // Create test.txt
         myFixture.addFileToProject("test.txt", "content")
@@ -96,7 +96,7 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
 
         // Run next feature (Feature 1)
         controller.runNextFeature()
-        assertEquals(OrchestratorState.RUNNING, lastState.get())
+        assertEquals(OrchestratorState.AWAITING_AI, lastState.get())
 
         // Verify
         controller.verifyNow()
