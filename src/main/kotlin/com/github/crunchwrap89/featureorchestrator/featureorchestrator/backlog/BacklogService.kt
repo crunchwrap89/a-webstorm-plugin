@@ -16,6 +16,44 @@ import com.intellij.openapi.vfs.VirtualFile
 class BacklogService(private val project: Project) {
     private val log = Logger.getInstance(BacklogService::class.java)
 
+    companion object {
+        private val BACKLOG_HEADER = """
+# Backlog
+
+Add new features below. Each feature must start with `## Feature` followed by the feature name in a list item.
+Required sections: `### Description`.
+Optional sections: `### Requirements`, `### Out of Scope`, `### Acceptance Criteria`, `### Notes`, `### Context`.
+Wrap features in `---` separators.
+""".trimIndent()
+
+        private val TEMPLATE_FEATURE = """
+---
+## Feature
+- Placeholder Page
+
+### Description
+Add a new "Placeholder" page to the website that follows the same design
+pattern as the rest of the site.
+
+### Requirements
+- Page should be accessible at `/placeholder`
+- Use existing layout components
+- Match typography, spacing, and color scheme
+- Be responsive on mobile and desktop
+- Add styling for both dark and light mode.
+
+### Out of Scope
+- No animations beyond existing patterns
+
+### Acceptance Criteria
+- File exists: ./app/pages/placeholder.vue
+- Route `/placeholder` renders without errors
+- Visual style matches existing pages
+- Command succeeds: yarn build
+---
+""".trimIndent()
+    }
+
     fun backlogFile(): VirtualFile? {
         val roots = ProjectRootManager.getInstance(project).contentRoots
         for (root in roots) {
@@ -39,6 +77,38 @@ class BacklogService(private val project: Project) {
     fun parseBacklog(): Backlog? = readBacklogText()?.let { BacklogParser.parse(it) }
 
     fun firstUncheckedFeature(backlog: Backlog): BacklogFeature? = backlog.features.firstOrNull { !it.checked }
+
+    fun createTemplateBacklog() {
+        val basePath = project.basePath ?: return
+        val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath) ?: return
+
+        WriteCommandAction.runWriteCommandAction(project, "Create Backlog Template", null, Runnable {
+            try {
+                val file = baseDir.createChildData(this, "backlog.md")
+                val doc = FileDocumentManager.getInstance().getDocument(file)
+                doc?.setText(BACKLOG_HEADER + "\n\n" + TEMPLATE_FEATURE)
+                FileDocumentManager.getInstance().saveDocument(doc!!)
+            } catch (e: Exception) {
+                log.warn("Failed to create backlog.md", e)
+            }
+        })
+    }
+
+    fun appendTemplateToBacklog() {
+        val file = backlogFile() ?: return
+        val doc = FileDocumentManager.getInstance().getDocument(file) ?: return
+
+        WriteCommandAction.runWriteCommandAction(project, "Append Backlog Template", null, Runnable {
+            try {
+                val text = doc.text
+                val prefix = if (text.isNotEmpty() && !text.endsWith("\n")) "\n\n" else if (text.isNotEmpty()) "\n" else ""
+                doc.setText(text + prefix + TEMPLATE_FEATURE)
+                FileDocumentManager.getInstance().saveDocument(doc)
+            } catch (e: Exception) {
+                log.warn("Failed to append to backlog.md", e)
+            }
+        })
+    }
 
     fun markCompletedOrRemove(feature: BacklogFeature, behavior: CompletionBehavior): Boolean {
         val vf = backlogFile() ?: return false

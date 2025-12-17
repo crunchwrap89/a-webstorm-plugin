@@ -2,6 +2,7 @@ package com.github.crunchwrap89.featureorchestrator.featureorchestrator.ui
 
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.core.OrchestratorController
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
@@ -39,6 +40,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         rows = 5
     }
     private val runButton = JButton("▶ Run Next Feature")
+    private val editBacklogButton = JButton("Edit Backlog").apply { isVisible = false }
     private val verifyButton = JButton("Verify Now").apply { isEnabled = false }
     private val logArea = JTextArea().apply {
         isEditable = false
@@ -55,6 +57,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     }
 
     private val controller = OrchestratorController(project, this)
+    private var lastStatus: BacklogStatus = BacklogStatus.OK
 
     init {
         val header = JBPanel<JBPanel<*>>(BorderLayout()).apply {
@@ -72,6 +75,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
         val buttons = JBPanel<JBPanel<*>>().apply {
             add(runButton)
+            add(editBacklogButton)
             add(verifyButton)
             add(changesLabel)
         }
@@ -95,6 +99,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         add(logPanel, BorderLayout.SOUTH)
 
         runButton.addActionListener { controller.runNextFeature() }
+        editBacklogButton.addActionListener { controller.createOrUpdateBacklog() }
         verifyButton.addActionListener { controller.verifyNow() }
     }
 
@@ -126,7 +131,32 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         promptPreview.text = ""
     }
 
+    override fun onBacklogStatusChanged(status: BacklogStatus) {
+        lastStatus = status
+        when (status) {
+            BacklogStatus.MISSING -> {
+                featureName.text = "Backlog Missing"
+                featureDesc.text = "No backlog.md found in project root."
+                runButton.isVisible = false
+                editBacklogButton.isVisible = true
+                editBacklogButton.text = "Create Backlog"
+            }
+            BacklogStatus.NO_FEATURES -> {
+                featureName.text = "No Features"
+                featureDesc.text = "No unchecked features found in backlog.md."
+                runButton.isVisible = false
+                editBacklogButton.isVisible = true
+                editBacklogButton.text = "Add Feature"
+            }
+            BacklogStatus.OK -> {
+                runButton.isVisible = true
+                editBacklogButton.isVisible = false
+            }
+        }
+    }
+
     override fun onFeaturePreview(feature: BacklogFeature?) {
+        if (lastStatus != BacklogStatus.OK) return
         featureName.text = feature?.let { "${it.name}" } ?: "No feature selected"
         featureDesc.text = feature?.description?.let { truncate(it, 600) } ?: ""
     }

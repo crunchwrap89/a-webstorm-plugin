@@ -1,6 +1,7 @@
 package com.github.crunchwrap89.featureorchestrator.featureorchestrator.core
 
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.CompletionBehavior
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
@@ -31,6 +32,7 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
             override fun onChangeCountChanged(count: Int) {}
             override fun onPromptGenerated(prompt: String) {}
             override fun onCompletion(success: Boolean) {}
+            override fun onBacklogStatusChanged(status: BacklogStatus) {}
         }
         controller = OrchestratorController(project, listener)
     }

@@ -31,6 +31,10 @@ enum class OrchestratorState {
     IDLE, HANDOFF, RUNNING, VERIFYING, COMPLETED, FAILED
 }
 
+enum class BacklogStatus {
+    OK, MISSING, NO_FEATURES
+}
+
 data class ExecutionSession(
     val feature: BacklogFeature,
     val changedFiles: MutableSet<VirtualFile> = linkedSetOf(),

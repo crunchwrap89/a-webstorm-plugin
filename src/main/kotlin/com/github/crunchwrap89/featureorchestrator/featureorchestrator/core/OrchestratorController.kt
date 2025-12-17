@@ -10,7 +10,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
-import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
@@ -23,8 +22,10 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.application.ApplicationManager
 
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
+import com.intellij.openapi.fileEditor.FileEditorManager
+
 class OrchestratorController(private val project: Project, private val listener: Listener) : Disposable {
-    private val log = Logger.getInstance(OrchestratorController::class.java)
     private val settings = project.service<OrchestratorSettings>()
     private val backlogService = project.service<BacklogService>()
 
@@ -43,6 +44,52 @@ class OrchestratorController(private val project: Project, private val listener:
         fun onPromptGenerated(prompt: String)
         fun onClearPrompt()
         fun onCompletion(success: Boolean)
+        fun onBacklogStatusChanged(status: BacklogStatus)
+    }
+
+    init {
+        // Initial check
+        ApplicationManager.getApplication().invokeLater {
+            validateBacklog()
+        }
+    }
+
+    fun validateBacklog() {
+        val backlogFile = backlogService.backlogFile()
+        if (backlogFile == null) {
+            listener.onBacklogStatusChanged(BacklogStatus.MISSING)
+            listener.onFeaturePreview(null)
+            return
+        }
+        val backlog = backlogService.parseBacklog()
+        if (backlog == null) {
+            listener.onBacklogStatusChanged(BacklogStatus.NO_FEATURES)
+            listener.onFeaturePreview(null)
+            return
+        }
+        val feature = backlogService.firstUncheckedFeature(backlog)
+        if (feature == null) {
+            listener.onBacklogStatusChanged(BacklogStatus.NO_FEATURES)
+            listener.onFeaturePreview(null)
+            return
+        }
+        listener.onBacklogStatusChanged(BacklogStatus.OK)
+        listener.onFeaturePreview(feature)
+    }
+
+    fun createOrUpdateBacklog() {
+        val backlogFile = backlogService.backlogFile()
+        if (backlogFile == null) {
+            backlogService.createTemplateBacklog()
+        } else {
+            backlogService.appendTemplateToBacklog()
+        }
+
+        val file = backlogService.backlogFile()
+        if (file != null) {
+            FileEditorManager.getInstance(project).openFile(file, true)
+        }
+        validateBacklog()
     }
 
     fun runNextFeature() {
@@ -51,14 +98,17 @@ class OrchestratorController(private val project: Project, private val listener:
         if (backlog == null) {
             warn("backlog.md not found in project root.")
             setState(OrchestratorState.FAILED)
+            validateBacklog()
             return
         }
+
         backlog.warnings.forEach { warn(it) }
         val feature = backlogService.firstUncheckedFeature(backlog)
         if (feature == null) {
             info("No unchecked features found. You're all caught up!")
             setState(OrchestratorState.IDLE)
             listener.onFeaturePreview(null)
+            validateBacklog()
             return
         }
         listener.onFeaturePreview(feature)
