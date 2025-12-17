@@ -110,8 +110,8 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
         assertTrue("Backlog should contain Feature 2", backlogText.contains("Feature 2"))
 
         // Check completed.md
-        val completed = myFixture.findFileInTempDir("completed.md")
-        assertNotNull("completed.md should exist", completed)
+        val completed = myFixture.findFileInTempDir("COMPLETED.md")
+        assertNotNull("COMPLETED.md should exist", completed)
         val completedText = String(completed.contentsToByteArray())
         assertTrue("Completed should contain Feature 1", completedText.contains("Feature 1"))
         assertTrue("Feature 1 should be checked", completedText.contains("- [x] Feature 1"))

@@ -57,7 +57,7 @@ pattern as the rest of the site.
     fun backlogFile(): VirtualFile? {
         val roots = ProjectRootManager.getInstance(project).contentRoots
         for (root in roots) {
-            val file = root.findChild("backlog.md")
+            val file = root.findChild("BACKLOG.md") ?: root.findChild("backlog.md")
             if (file != null) return file
         }
 
@@ -65,7 +65,7 @@ pattern as the rest of the site.
         val basePath = project.basePath
         if (basePath != null) {
             val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath)
-            val file = baseDir?.findChild("backlog.md")
+            val file = baseDir?.findChild("BACKLOG.md") ?: baseDir?.findChild("backlog.md")
             if (file != null) return file
         }
 
@@ -84,12 +84,12 @@ pattern as the rest of the site.
 
         WriteCommandAction.runWriteCommandAction(project, "Create Backlog Template", null, Runnable {
             try {
-                val file = baseDir.createChildData(this, "backlog.md")
+                val file = baseDir.createChildData(this, "BACKLOG.md")
                 val doc = FileDocumentManager.getInstance().getDocument(file)
                 doc?.setText(BACKLOG_HEADER + "\n\n" + TEMPLATE_FEATURE)
                 FileDocumentManager.getInstance().saveDocument(doc!!)
             } catch (e: Exception) {
-                log.warn("Failed to create backlog.md", e)
+                log.warn("Failed to create BACKLOG.md", e)
             }
         })
     }
@@ -148,9 +148,9 @@ pattern as the rest of the site.
                     CompletionBehavior.MOVE_TO_COMPLETED -> {
                         // 1. Append to completed.md
                         val parentDir = vf.parent
-                        var completedFile = parentDir.findChild("completed.md")
+                        var completedFile = parentDir.findChild("COMPLETED.md") ?: parentDir.findChild("completed.md")
                         if (completedFile == null) {
-                            completedFile = parentDir.createChildData(this, "completed.md")
+                            completedFile = parentDir.createChildData(this, "COMPLETED.md")
                             val d = FileDocumentManager.getInstance().getDocument(completedFile)
                             d?.setText("# Completed Features\n\n---\n")
                         }
