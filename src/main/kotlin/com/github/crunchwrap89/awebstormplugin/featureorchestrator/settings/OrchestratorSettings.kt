@@ -6,10 +6,10 @@ import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.project.Project
 
-enum class CompletionBehavior { CHECK_OFF, REMOVE_FEATURE }
+enum class CompletionBehavior { CHECK_OFF, REMOVE_FEATURE, MOVE_TO_COMPLETED }
 
 data class OrchestratorSettingsState(
-    var completionBehavior: CompletionBehavior = CompletionBehavior.CHECK_OFF,
+    var completionBehavior: CompletionBehavior = CompletionBehavior.MOVE_TO_COMPLETED,
     var copyPromptToClipboard: Boolean = true,
     var showNotificationAfterHandoff: Boolean = true,
     var commandTimeoutSeconds: Int = 600,

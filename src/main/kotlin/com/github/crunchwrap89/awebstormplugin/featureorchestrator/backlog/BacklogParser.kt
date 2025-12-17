@@ -7,8 +7,9 @@ object BacklogParser {
     private val log = Logger.getInstance(BacklogParser::class.java)
 
     private val featureHeaderRegex = Regex("""^## +Feature\s*$""")
-    private val nameRegex = Regex("""^- \[( |x|X)] +(.+)$""")
+    private val nameRegex = Regex("""^- (?:\[( |x|X)] +)?(.+)$""")
     private val sectionHeaderRegex = Regex("""^### +(.+)$""")
+    private val separatorRegex = Regex("""^---+\s*$""")
 
     fun parse(text: String): Backlog {
         val lines = text.lines()
@@ -20,8 +21,13 @@ object BacklogParser {
             if (!featureHeaderRegex.matches(lines[i])) { i++; continue }
             val blockStart = i
             i++
+            // Skip blank lines after ## Feature
+            while (i < lines.size && lines[i].isBlank()) {
+                i++
+            }
+
             if (i >= lines.size || !nameRegex.matches(lines[i])) {
-                warnings += warning(blockStart, "Missing feature checkbox line after '## Feature'. Skipping block.")
+                warnings += warning(blockStart, "Missing feature name line (e.g. '- Feature Name') after '## Feature'. Skipping block.")
                 i++
                 continue
             }
@@ -44,7 +50,7 @@ object BacklogParser {
             }
             i++
             val descriptionBuilder = StringBuilder()
-            while (i < lines.size && !featureHeaderRegex.matches(lines[i]) && !(sectionHeaderRegex.matches(lines[i]))) {
+            while (i < lines.size && !featureHeaderRegex.matches(lines[i]) && !sectionHeaderRegex.matches(lines[i]) && !separatorRegex.matches(lines[i])) {
                 descriptionBuilder.appendLine(lines[i])
                 i++
             }
@@ -58,12 +64,12 @@ object BacklogParser {
             val optionalSections = mutableMapOf<Section, String>()
             val acceptanceCriteria = mutableListOf<AcceptanceCriterion>()
 
-            while (i < lines.size && !featureHeaderRegex.matches(lines[i])) {
+            while (i < lines.size && !featureHeaderRegex.matches(lines[i]) && !separatorRegex.matches(lines[i])) {
                 if (!sectionHeaderRegex.matches(lines[i])) { i++; continue }
                 val secTitle = lines[i].removePrefix("### ").trim()
                 i++
                 val content = StringBuilder()
-                while (i < lines.size && !featureHeaderRegex.matches(lines[i]) && !sectionHeaderRegex.matches(lines[i])) {
+                while (i < lines.size && !featureHeaderRegex.matches(lines[i]) && !sectionHeaderRegex.matches(lines[i]) && !separatorRegex.matches(lines[i])) {
                     content.appendLine(lines[i])
                     i++
                 }

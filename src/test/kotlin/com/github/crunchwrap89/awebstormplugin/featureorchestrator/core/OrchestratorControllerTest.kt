@@ -2,6 +2,7 @@ package com.github.crunchwrap89.awebstormplugin.featureorchestrator.core
 
 import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.BacklogFeature
 import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.OrchestratorState
+import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.CompletionBehavior
 import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.OrchestratorSettings
 import com.intellij.openapi.components.service
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
@@ -65,6 +66,51 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
         controller.verifyNow()
         waitForState(OrchestratorState.COMPLETED)
         assertEquals(OrchestratorState.COMPLETED, lastState.get())
+    }
+
+    fun testMoveToCompleted() {
+        val settings = project.service<OrchestratorSettings>()
+        settings.completionBehavior = CompletionBehavior.MOVE_TO_COMPLETED
+
+        // Create backlog.md
+        myFixture.addFileToProject("backlog.md", """
+            # Backlog
+            ## Feature
+            - [ ] Feature 1
+            ### Description
+            Desc 1
+            ### Acceptance Criteria
+            - File exists: f1.txt
+
+            ## Feature
+            - [ ] Feature 2
+            ### Description
+            Desc 2
+        """.trimIndent())
+
+        myFixture.addFileToProject("f1.txt", "")
+
+        // Run next feature (Feature 1)
+        controller.runNextFeature()
+        assertEquals(OrchestratorState.RUNNING, lastState.get())
+
+        // Verify
+        controller.verifyNow()
+        waitForState(OrchestratorState.COMPLETED)
+        assertEquals(OrchestratorState.COMPLETED, lastState.get())
+
+        // Check backlog.md
+        val backlog = myFixture.findFileInTempDir("backlog.md")
+        val backlogText = String(backlog.contentsToByteArray())
+        assertFalse("Backlog should not contain Feature 1", backlogText.contains("Feature 1"))
+        assertTrue("Backlog should contain Feature 2", backlogText.contains("Feature 2"))
+
+        // Check completed.md
+        val completed = myFixture.findFileInTempDir("completed.md")
+        assertNotNull("completed.md should exist", completed)
+        val completedText = String(completed.contentsToByteArray())
+        assertTrue("Completed should contain Feature 1", completedText.contains("Feature 1"))
+        assertTrue("Feature 1 should be checked", completedText.contains("- [x] Feature 1"))
     }
 
     private fun waitForState(expected: OrchestratorState) {
