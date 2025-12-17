@@ -5,8 +5,10 @@ import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Bac
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.ExecutionSession
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.PromptHandoffBehavior
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.components.service
+import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.VirtualFile
@@ -20,6 +22,7 @@ import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.progress.Task
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.wm.ToolWindowManager
 
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -169,10 +172,8 @@ class OrchestratorController(private val project: Project, private val listener:
 
         val prompt = PromptGenerator.generate(feature)
         listener.onPromptGenerated(prompt)
-        if (settings.copyPromptToClipboard) {
-            CopyPasteManager.getInstance().setContents(StringSelection(prompt))
-            info("Prompt copied to clipboard.")
-        }
+        handoffPrompt(prompt)
+
         if (settings.showNotificationAfterHandoff) {
             Messages.showInfoMessage(project, "Prompt prepared. Paste it into your AI tool (Copilot Chat or JetBrains AI Assistant).", "Feature Orchestrator")
         }
@@ -180,6 +181,7 @@ class OrchestratorController(private val project: Project, private val listener:
         startMonitoring(feature)
         setState(OrchestratorState.AWAITING_AI)
         info("Prompt ready to be pasted to your AI Agent of choice.")
+        info("Verify implementation when your AI Agent is completed.")
     }
 
     fun verifyNow() {
@@ -205,10 +207,8 @@ class OrchestratorController(private val project: Project, private val listener:
                             info("Verification failed.")
                             val prompt = PromptGenerator.generateFailurePrompt(s.feature, result.failures)
                             listener.onPromptGenerated(prompt)
-                            if (settings.copyPromptToClipboard) {
-                                CopyPasteManager.getInstance().setContents(StringSelection(prompt))
-                                log("Failure prompt copied to clipboard.")
-                            }
+                            handoffPrompt(prompt)
+
                             if (settings.showNotificationAfterHandoff) {
                                 Messages.showInfoMessage(project, "Verification failed. Failure prompt prepared. Paste it into your AI tool to fix the issues.", "Feature Orchestrator")
                             }
@@ -224,6 +224,38 @@ class OrchestratorController(private val project: Project, private val listener:
                 }
             }
         })
+    }
+
+    private fun handoffPrompt(prompt: String) {
+        // Always copy to clipboard as a fallback/convenience
+        CopyPasteManager.getInstance().setContents(StringSelection(prompt))
+
+        when (settings.promptHandoffBehavior) {
+            PromptHandoffBehavior.COPY_TO_CLIPBOARD -> {
+                info("Prompt copied to clipboard.")
+            }
+            PromptHandoffBehavior.AUTO_COPILOT -> {
+                info("Prompt copied to clipboard. Opening Copilot...")
+                // Try common IDs for Copilot Chat
+                openToolWindow("copilot.chat.show")
+            }
+            PromptHandoffBehavior.AUTO_AI_ASSISTANT -> {
+                info("Prompt copied to clipboard. Opening AI Assistant...")
+                openToolWindow("AIAssistant")
+            }
+        }
+    }
+
+    private fun openToolWindow(id: String): Boolean {
+        val toolWindowManager = ToolWindowManager.getInstance(project)
+        val toolWindow = toolWindowManager.getToolWindow(id)
+        if (toolWindow != null) {
+            toolWindow.activate(null)
+            return true
+        } else {
+            warn("Tool window '$id' not found.")
+            return false
+        }
     }
 
     fun reset() {

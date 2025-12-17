@@ -8,9 +8,11 @@ import com.intellij.openapi.project.Project
 
 enum class CompletionBehavior { CHECK_OFF, REMOVE_FEATURE, MOVE_TO_COMPLETED }
 
+enum class PromptHandoffBehavior { COPY_TO_CLIPBOARD, AUTO_COPILOT, AUTO_AI_ASSISTANT }
+
 data class OrchestratorSettingsState(
     var completionBehavior: CompletionBehavior = CompletionBehavior.MOVE_TO_COMPLETED,
-    var copyPromptToClipboard: Boolean = true,
+    var promptHandoffBehavior: PromptHandoffBehavior = PromptHandoffBehavior.COPY_TO_CLIPBOARD,
     var showNotificationAfterHandoff: Boolean = true,
     var commandTimeoutSeconds: Int = 600,
 )
@@ -30,9 +32,9 @@ class OrchestratorSettings(private val project: Project) : PersistentStateCompon
         get() = state.completionBehavior
         set(value) { state.completionBehavior = value }
 
-    var copyPromptToClipboard: Boolean
-        get() = state.copyPromptToClipboard
-        set(value) { state.copyPromptToClipboard = value }
+    var promptHandoffBehavior: PromptHandoffBehavior
+        get() = state.promptHandoffBehavior
+        set(value) { state.promptHandoffBehavior = value }
 
     var showNotificationAfterHandoff: Boolean
         get() = state.showNotificationAfterHandoff

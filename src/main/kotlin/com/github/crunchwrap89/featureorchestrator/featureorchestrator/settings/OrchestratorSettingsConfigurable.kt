@@ -28,7 +28,18 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
             }
         }
     }
-    private val copyPromptCheckBox = JBCheckBox("Copy prompt to clipboard automatically")
+    private val promptHandoffComboBox = ComboBox(PromptHandoffBehavior.values()).apply {
+        renderer = object : SimpleListCellRenderer<PromptHandoffBehavior>() {
+            override fun customize(list: JList<out PromptHandoffBehavior>, value: PromptHandoffBehavior?, index: Int, selected: Boolean, hasFocus: Boolean) {
+                text = when (value) {
+                    PromptHandoffBehavior.COPY_TO_CLIPBOARD -> "Copy prompt to clipboard"
+                    PromptHandoffBehavior.AUTO_COPILOT -> "Automatically add prompt to Copilot AI Agent"
+                    PromptHandoffBehavior.AUTO_AI_ASSISTANT -> "Automatically add prompt to AI Assistant"
+                    null -> ""
+                }
+            }
+        }
+    }
     private val showNotificationCheckBox = JBCheckBox("Show notification after prompt generation/verification failure")
     private val commandTimeoutField = JBTextField()
 
@@ -37,7 +48,7 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
     override fun createComponent(): JComponent {
         settingsPanel = FormBuilder.createFormBuilder()
             .addLabeledComponent(JBLabel("Completion behavior:"), completionBehaviorComboBox)
-            .addComponent(copyPromptCheckBox)
+            .addLabeledComponent(JBLabel("Prompt handoff:"), promptHandoffComboBox)
             .addComponent(showNotificationCheckBox)
             .addLabeledComponent(JBLabel("Command timeout (seconds):"), commandTimeoutField)
             .addComponentFillVertically(JPanel(), 0)
@@ -48,7 +59,7 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
     override fun isModified(): Boolean {
         val settings = project.service<OrchestratorSettings>()
         var modified = completionBehaviorComboBox.selectedItem != settings.completionBehavior
-        modified = modified or (copyPromptCheckBox.isSelected != settings.copyPromptToClipboard)
+        modified = modified or (promptHandoffComboBox.selectedItem != settings.promptHandoffBehavior)
         modified = modified or (showNotificationCheckBox.isSelected != settings.showNotificationAfterHandoff)
         val timeout = commandTimeoutField.text.toIntOrNull() ?: 600
         modified = modified or (timeout != settings.commandTimeoutSeconds)
@@ -58,7 +69,7 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
     override fun apply() {
         val settings = project.service<OrchestratorSettings>()
         settings.completionBehavior = completionBehaviorComboBox.selectedItem as CompletionBehavior
-        settings.copyPromptToClipboard = copyPromptCheckBox.isSelected
+        settings.promptHandoffBehavior = promptHandoffComboBox.selectedItem as PromptHandoffBehavior
         settings.showNotificationAfterHandoff = showNotificationCheckBox.isSelected
         settings.commandTimeoutSeconds = commandTimeoutField.text.toIntOrNull() ?: 600
     }
@@ -66,7 +77,7 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
     override fun reset() {
         val settings = project.service<OrchestratorSettings>()
         completionBehaviorComboBox.selectedItem = settings.completionBehavior
-        copyPromptCheckBox.isSelected = settings.copyPromptToClipboard
+        promptHandoffComboBox.selectedItem = settings.promptHandoffBehavior
         showNotificationCheckBox.isSelected = settings.showNotificationAfterHandoff
         commandTimeoutField.text = settings.commandTimeoutSeconds.toString()
     }
