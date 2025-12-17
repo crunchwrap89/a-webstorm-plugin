@@ -12,6 +12,7 @@ data class OrchestratorSettingsState(
     var completionBehavior: CompletionBehavior = CompletionBehavior.CHECK_OFF,
     var copyPromptToClipboard: Boolean = true,
     var showNotificationAfterHandoff: Boolean = true,
+    var commandTimeoutSeconds: Int = 600,
 )
 
 @Service(Service.Level.PROJECT)
@@ -36,4 +37,8 @@ class OrchestratorSettings(private val project: Project) : PersistentStateCompon
     var showNotificationAfterHandoff: Boolean
         get() = state.showNotificationAfterHandoff
         set(value) { state.showNotificationAfterHandoff = value }
+
+    var commandTimeoutSeconds: Int
+        get() = state.commandTimeoutSeconds
+        set(value) { state.commandTimeoutSeconds = value }
 }

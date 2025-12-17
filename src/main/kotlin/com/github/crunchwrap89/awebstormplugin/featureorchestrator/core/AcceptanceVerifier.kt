@@ -1,12 +1,15 @@
 package com.github.crunchwrap89.awebstormplugin.featureorchestrator.core
 
 import com.github.crunchwrap89.awebstormplugin.featureorchestrator.model.AcceptanceCriterion
+import com.github.crunchwrap89.awebstormplugin.featureorchestrator.settings.OrchestratorSettings
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.CapturingProcessHandler
 import com.intellij.openapi.application.runReadAction
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.roots.ProjectRootManager
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.util.EnvironmentUtil
 import java.io.File
 
 data class VerificationResult(val success: Boolean, val details: List<String>)
@@ -14,6 +17,8 @@ data class VerificationResult(val success: Boolean, val details: List<String>)
 object AcceptanceVerifier {
     fun verify(project: Project, criteria: List<AcceptanceCriterion>): VerificationResult {
         if (criteria.isEmpty()) return VerificationResult(false, listOf("No acceptance criteria present."))
+        val settings = project.service<OrchestratorSettings>()
+        val timeoutMs = settings.commandTimeoutSeconds * 1000
         val details = mutableListOf<String>()
         var allOk = true
         criteria.forEach { c ->
@@ -44,13 +49,42 @@ object AcceptanceVerifier {
                     val commandLine = if (isWindows()) {
                         GeneralCommandLine("cmd", "/c", cmd)
                     } else {
-                        GeneralCommandLine("sh", "-lc", cmd)
+                        val shell = System.getenv("SHELL") ?: "/bin/sh"
+                        // Use -c instead of -lc to rely on EnvironmentUtil's captured environment
+                        // and avoid potential issues with double-sourcing shell profiles.
+                        GeneralCommandLine(shell, "-c", cmd)
                     }
                     project.basePath?.let { commandLine.withWorkDirectory(it) }
+
+                    if (!isWindows()) {
+                        try {
+                            val env = EnvironmentUtil.getEnvironmentMap()
+                            commandLine.withEnvironment(env)
+                        } catch (e: Exception) {
+                            // Ignore if we can't get the environment
+                        }
+                    }
+
                     val handler = CapturingProcessHandler(commandLine)
-                    val output = handler.runProcess(60_000)
+                    val output = handler.runProcess(timeoutMs)
                     val ok = output.exitCode == 0
-                    details += (if (ok) "✔ Command succeeded: $cmd" else "✘ Command failed ($cmd): exit=${output.exitCode}\n${output.stdout}\n${output.stderr}")
+
+                    val sb = StringBuilder()
+                    if (ok) {
+                        sb.append("✔ Command succeeded: $cmd")
+                    } else {
+                        sb.append("✘ Command failed ($cmd): exit=${output.exitCode}")
+                        sb.append("\nWorking Dir: ${commandLine.workDirectory}")
+                        sb.append("\nSTDOUT:\n${output.stdout}")
+                        sb.append("\nSTDERR:\n${output.stderr}")
+
+                        // Heuristic for missing dependencies
+                        if (output.stderr.contains("not installed", ignoreCase = true) ||
+                            output.stderr.contains("command not found", ignoreCase = true)) {
+                            sb.append("\n\nHINT: You may need to run 'npm install' or 'yarn install' in your project.")
+                        }
+                    }
+                    details += sb.toString()
                     allOk = allOk && ok
                 }
             }
