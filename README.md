@@ -4,21 +4,15 @@
 [![Version](https://img.shields.io/jetbrains/plugin/v/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
 
-## Template ToDo list
-- [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
-- [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
-- [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
-- [ ] Configure the [CODECOV_TOKEN](https://docs.codecov.com/docs/quick-start) secret for automated test coverage reports on PRs
-
 <!-- Plugin description -->
 
 # Feature Orchestrator
 
-Today you write prompts and refine your backlog as two different work tasks, why not combine the two?
-Today you go to a separate tool, such as jira or trello to find out what feature to work on next. Why not keep track of it in your IDE and in your codebase?
-Today you feed your AI and verify the result with no fixed strategy, why not have a repeatable workflow for it?
-Today you write follow-up prompts manually if something fails, why not automate that prompt generation?
-Today you return to your ticket management tool to manually mark your feature as done. Why not automate this? 
+- Today you write prompts and refine your backlog as two different work tasks, why not combine the two?
+- Today you go to a separate tool, such as jira or trello to find out what feature to work on next. Why not keep track of it in your IDE and in your codebase?
+- Today you feed your AI and verify the result with no fixed strategy, why not have a repeatable workflow for it?
+- Today you write follow-up prompts manually if something fails, why not automate that prompt generation?
+- Today you return to your ticket management tool to manually mark your feature as done. Why not automate this? 
 
 **Feature Orchestrator** fixes all of this by combining feature planning, AI prompt generation, implementation verification and backlog management into a single, repeatable workflow so you can spend less time in ticket management systems and less time writing AI Prompts.
 
