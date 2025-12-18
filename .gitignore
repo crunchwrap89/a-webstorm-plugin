@@ -5,3 +5,10 @@
 .kotlin
 .qodana
 build
+
+# Secrets
+secrets/
+*.pem
+*.crt
+*.key
+password.txt

@@ -89,9 +89,19 @@ intellijPlatform {
     }
 
     signing {
+        val secretsDir = layout.projectDirectory.dir("secrets")
+
         certificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
         privateKey = providers.environmentVariable("PRIVATE_KEY")
         password = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
+            .orElse(providers.fileContents(secretsDir.file("password.txt")).asText.map { it.trim() })
+
+        if (!certificateChain.isPresent) {
+            certificateChainFile = secretsDir.file("chain.crt")
+        }
+        if (!privateKey.isPresent) {
+            privateKeyFile = secretsDir.file("private.pem")
+        }
     }
 
     publishing {
