@@ -7,7 +7,7 @@ object BacklogParser {
     private val log = Logger.getInstance(BacklogParser::class.java)
 
     private val featureHeaderRegex = Regex("""^## +Feature name\s*$""")
-    private val nameRegex = Regex("""^- (?:\[( |x|X)] +)?(.+)$""")
+    private val nameRegex = Regex("""^(?:\[( |x|X)] +)?(.+)$""")
     private val sectionHeaderRegex = Regex("""^### +(.+)$""")
     private val separatorRegex = Regex("""^---+\s*$""")
 
@@ -27,7 +27,7 @@ object BacklogParser {
             }
 
             if (i >= lines.size || !nameRegex.matches(lines[i])) {
-                warnings += warning(blockStart, "Missing feature name line (e.g. '- Feature Name') after '## Feature name'. Skipping block.")
+                warnings += warning(blockStart, "Missing feature name line (e.g. 'Feature Name') after '## Feature name'. Skipping block.")
                 i++
                 continue
             }

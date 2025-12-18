@@ -226,20 +226,21 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
                 prevButton.isEnabled = false
                 nextButton.isEnabled = false
 
+                createBacklogButton.text = "Create Backlog"
                 cardLayout.show(centerNavPanel, "BUTTON")
             }
             BacklogStatus.NO_FEATURES -> {
                 featureName.text = "No Features"
-                featureDesc.text = "No unchecked features found in backlog.md."
+                featureDesc.text = "No unchecked features found in BACKLOG.md. Press Add Feature to append a new feature template."
                 acceptanceCriteriaArea.text = ""
                 runButton.isVisible = true
                 runButton.isEnabled = false
-                editBacklogButton.isVisible = true
-                editBacklogButton.text = "Add Feature"
+                editBacklogButton.isVisible = false
                 prevButton.isEnabled = false
                 nextButton.isEnabled = false
 
-                cardLayout.show(centerNavPanel, "LABEL")
+                createBacklogButton.text = "Add Feature"
+                cardLayout.show(centerNavPanel, "BUTTON")
             }
             BacklogStatus.OK -> {
                 runButton.isVisible = true
@@ -319,7 +320,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     }
 
     override fun onCompletion(success: Boolean) {
-        onLog(if (success) "Verification succeeded." else "Verification failed.")
+
     }
 
     private fun truncate(text: String, max: Int): String = if (text.length <= max) text else text.substring(0, max) + "…"

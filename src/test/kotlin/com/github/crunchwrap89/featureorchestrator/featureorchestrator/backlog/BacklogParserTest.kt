@@ -12,7 +12,7 @@ class BacklogParserTest {
             # Backlog
 
             ## Feature name
-            - [ ] About Page
+            [ ] About Page
 
             ### Description
             Add a new "About" page.
@@ -33,7 +33,7 @@ class BacklogParserTest {
             # Backlog
 
             ## Feature name
-            - [ ] About Page
+            [ ] About Page
             ### Description
             Add a new "About" page.
         """.trimIndent()
@@ -53,7 +53,7 @@ class BacklogParserTest {
             # Backlog
 
             ## Feature name
-            - [ ] About Page
+            [ ] About Page
             ### Description
             Desc
             ### Acceptance Criteria

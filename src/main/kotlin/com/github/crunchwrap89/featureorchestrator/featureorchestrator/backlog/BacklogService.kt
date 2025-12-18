@@ -20,14 +20,14 @@ class BacklogService(private val project: Project) {
         private val BACKLOG_HEADER = """
 # Backlog
 - Wrap features in `---` separators. 
-- Feature and Description is required, other fields are optional but recommended.
+- Feature name and Description is required, other fields are optional but recommended.
 - Acceptance Criteria will be used to verify completion, some automatically, others may require manual verification.
 """.trimIndent()
 
         private val TEMPLATE_FEATURE = """
 ---
 ## Feature name
-- New About Page
+New About Page
 
 ### Description
 Add a new "About" page to the website that explains what this website is for.
@@ -124,12 +124,12 @@ Add a new "About" page to the website that explains what this website is for.
                 when (behavior) {
                     CompletionBehavior.CHECK_OFF -> {
                         // Try to find line with checkbox first
-                        var oldLineRegex = Regex("""^- \[ ] +${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
+                        var oldLineRegex = Regex("""^\[ ] +${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
                         if (!oldLineRegex.containsMatchIn(text)) {
                             // Try without checkbox
-                            oldLineRegex = Regex("""^- +${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
+                            oldLineRegex = Regex("""^${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
                         }
-                        val newText = text.replace(oldLineRegex, "- [x] ${feature.name}")
+                        val newText = text.replace(oldLineRegex, "[x] ${feature.name}")
                         doc.setText(newText)
                     }
                     CompletionBehavior.REMOVE_FEATURE -> {
@@ -152,11 +152,11 @@ Add a new "About" page to the website that explains what this website is for.
 
                             // Mark as checked in the moved block
                             var checkedBlock = target.rawBlock
-                            if (checkedBlock.contains("- [ ]")) {
-                                checkedBlock = checkedBlock.replaceFirst("- [ ]", "- [x]")
+                            if (checkedBlock.contains("[ ]")) {
+                                checkedBlock = checkedBlock.replaceFirst("[ ]", "[x]")
                             } else {
                                 // If no checkbox, add one
-                                checkedBlock = checkedBlock.replaceFirst("- ${feature.name}", "- [x] ${feature.name}")
+                                checkedBlock = checkedBlock.replaceFirst(feature.name, "[x] ${feature.name}")
                             }
                             completedDoc.setText(currentText + prefix + checkedBlock + "\n\n---")
                             FileDocumentManager.getInstance().saveDocument(completedDoc)
