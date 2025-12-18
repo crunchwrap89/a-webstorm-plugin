@@ -115,7 +115,7 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
         assertNotNull("COMPLETED.md should exist", completed)
         val completedText = String(completed.contentsToByteArray())
         assertTrue("Completed should contain Feature 1", completedText.contains("Feature 1"))
-        assertTrue("Feature 1 should be checked", completedText.contains("- [x] Feature 1"))
+        assertTrue("Feature 1 should be checked", completedText.contains("[x] Feature 1"))
     }
 
     private fun waitForState(expected: OrchestratorState) {
