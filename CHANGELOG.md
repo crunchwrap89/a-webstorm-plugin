@@ -1,6 +1,15 @@
-<!-- Keep a Changelog guide -> https://keepachangelog.com -->
-
 # Feature Orchestrator Changelog
+
+## [Unreleased]
+### Added
+- Minor bug fixes and improvements
+- Improved copy texts
+- Added tests for core functionalities
+
+## [1.1.2] - 2025-12-18
+### Fixed
+- Fixed build failure related to PluginManagerConfigurable
+- Fixed initial state issue when backlog is missing
 
 ## [1.1.1] - 2025-12-18
 ### Fixed

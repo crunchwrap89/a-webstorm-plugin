@@ -1,12 +1,10 @@
 # Feature Orchestrator IntelliJ Platform Plugin
 
 ![Build](https://github.com/crunchwrap89/feature-orchestrator/workflows/Build/badge.svg)
-[![Version](https://img.shields.io/jetbrains/plugin/v/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
-[![Downloads](https://img.shields.io/jetbrains/plugin/d/MARKETPLACE_ID.svg)](https://plugins.jetbrains.com/plugin/MARKETPLACE_ID)
+[![Version](https://img.shields.io/jetbrains/plugin/v/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
+[![Downloads](https://img.shields.io/jetbrains/plugin/d/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
 
 ## Template ToDo list
-- [ ] [Publish a plugin manually](https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate) for the first time.
-- [ ] Set the `MARKETPLACE_ID` in the above README badges. You can obtain it once the plugin is published to JetBrains Marketplace.
 - [ ] Set the [Plugin Signing](https://plugins.jetbrains.com/docs/intellij/plugin-signing.html?from=IJPluginTemplate) related [secrets](https://github.com/JetBrains/intellij-platform-plugin-template#environment-variables).
 - [ ] Set the [Deployment Token](https://plugins.jetbrains.com/docs/marketplace/plugin-upload.html?from=IJPluginTemplate).
 - [ ] Click the <kbd>Watch</kbd> button on the top of the [IntelliJ Platform Plugin Template][template] to be notified about releases containing new features and fixes.
@@ -15,42 +13,40 @@
 <!-- Plugin description -->
 
 # Feature Orchestrator
-Today you must keep track of your backlog in a separate tool and write your prompts based on what's in your backlog.
-After feeding your AI you need to verify the results manually, and then you need to write new prompts to fix what’s missing if something is wrong. You also need to keep your backlog in sync manually.
 
-**Feature Orchestrator** makes everything in this process easier.
+Today you write prompts and refine your backlog as two different work tasks, why not combine the two?
+Today you go to a separate tool, such as jira or trello to find out what feature to work on next. Why not keep track of it in your IDE and in your codebase?
+Today you feed your AI and verify the result with no fixed strategy, why not have a repeatable workflow for it?
+Today you write follow-up prompts manually if something fails, why not automate that prompt generation?
+Today you return to your ticket management tool to manually mark your feature as done. Why not automate this? 
+
+**Feature Orchestrator** fixes all of this by combining feature planning, AI prompt generation, implementation verification and backlog management into a single, repeatable workflow so you can spend less time in ticket management systems and less time writing AI Prompts.
+
+> ** Plan → Generate prompt → AI Work → Verify implementation → Mark as completed **
 
 ---
 
-## What it does
+## How it works
 
-Feature Orchestrator generates a `BACKLOG.md` file to your project. Here you can plan your features with **clear acceptance criterias**.
+Feature Orchestrator generates a `BACKLOG.md` where you can plan your features with **clear acceptance criterias**.
 
 - Cycle through your features and choose which one to implement next.
-- Press Implement feature to generate a **clear, structured AI prompt** for the selected feature.
-- Depending on your plugin settings it will either just copy the prompt to your clipboard or open your AI assistant with the prompt pre-filled.
+- Press Generate prompt to create a **clear, structured AI prompt** for the selected feature.
+- Depending on your plugin settings, it will either just copy the prompt to your clipboard or open your AI assistant with the prompt pre-filled.
 - Let your AI Agent complete the feature.
-- Press **Verify implementation** and the plugin will check if all acceptance criterias are fulfilled (by running tests, build commands or file checks.)
-- If acceptance criterias are NOT fulfilled, it will generate a new prompt for you to hand to the AI Agent to fix what’s missing.
-- If acceptance criterias are fulfilled, it will mark the feature as completed.
+- Press **Verify implementation** and the plugin will check if all Acceptance Criteria are fulfilled (by running tests, build commands or file checks.)
+- If acceptance criteria are NOT fulfilled, it will generate a new prompt for you to hand to the AI Agent.
+- If acceptance criteria are fulfilled, it will mark the feature as completed.
 
-Works seemless with your current AI Tools.  
-Simple backlog management with git versioning.  
+
+Works seamless with your current AI Tools.  
+Simple backlog management with Markdown and git versioning.  
 100% Free and Open Source.
 
 ---
-
-### Feature Orchestrator binds it all together:
-
-> **Feature → AI work → Verification → Backlog state**
-
-This turns AI-assisted coding into a **repeatable, trustworthy workflow** with less time in ticket management tools and less time writing prompts.
-
----
-
 ## Designed for developers
 
-- Works entirely with all IntelliJ based IDEs, including Webstorm.
+- Works entirely with all IntelliJ-based IDEs, including Webstorm.
 - Uses your existing AI plugins
 - Fully transparent execution logs
 - Explicit user actions only
@@ -66,6 +62,7 @@ Feature Orchestrator never runs on its own and never modifies planning files via
 - Developers shipping fast with Copilot or JetBrains AI
 - Anyone tired of manually keeping backlogs in sync with reality
 - Anyone tired of writing prompts from scratch
+- Anyone who wants to save time and mental energy when working with AI
 
 ---
 
@@ -75,7 +72,7 @@ Feature Orchestrator never runs on its own and never modifies planning files via
 - Not a background task runner
 - Not another AI chat interface
 
-It’s a **workflow orchestrator** — and that’s exactly why it works.
+It’s a **Feature orchestrator**. 
 
 ---
 <!-- Plugin description end -->

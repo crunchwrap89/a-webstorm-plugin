@@ -15,7 +15,6 @@
                 parentId="tools"
                 instance="com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettingsConfigurable"
                 id="com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettingsConfigurable"
-                displayName="Feature Orchestrator"
-                nonDefaultProject="true"/>
+                displayName="Feature Orchestrator"/>
     </extensions>
 </idea-plugin>
