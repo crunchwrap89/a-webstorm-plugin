@@ -48,5 +48,7 @@ object PromptGenerator {
     private fun describe(c: AcceptanceCriterion): String = when (c) {
         is AcceptanceCriterion.FileExists -> "File exists: ${c.relativePath}"
         is AcceptanceCriterion.CommandSucceeds -> "Command succeeds: ${c.command}"
+        is AcceptanceCriterion.NoTestsFail -> "No tests fail"
+        is AcceptanceCriterion.ManualVerification -> "Manual verification: ${c.description}"
     }
 }

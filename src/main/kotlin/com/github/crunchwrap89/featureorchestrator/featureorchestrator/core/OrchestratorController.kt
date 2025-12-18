@@ -281,7 +281,6 @@ class OrchestratorController(private val project: Project, private val listener:
         }
         stopMonitoring()
         setState(OrchestratorState.COMPLETED)
-        listener.onClearLog()
         info("Feature '${s.feature.name}' marked completed (${behavior.name}).")
         listener.onCompletion(true)
         listener.onFeaturePreview(null)

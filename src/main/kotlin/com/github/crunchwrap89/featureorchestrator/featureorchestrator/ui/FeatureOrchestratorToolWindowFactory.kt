@@ -211,6 +211,8 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
             when (c) {
                 is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.FileExists -> "- File exists: ${c.relativePath}"
                 is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.CommandSucceeds -> "- Command succeeds: ${c.command}"
+                is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.NoTestsFail -> "- No tests fail"
+                is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.ManualVerification -> "- Manual check: ${c.description}"
             }
         } ?: ""
         acceptanceCriteriaArea.text = criteriaText

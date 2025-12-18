@@ -61,52 +61,89 @@ object AcceptanceVerifier {
                     allOk = allOk && exists
                 }
                 is AcceptanceCriterion.CommandSucceeds -> {
-                    val cmd = c.command
-                    val commandLine = if (isWindows()) {
-                        GeneralCommandLine("cmd", "/c", cmd)
-                    } else {
-                        val shell = System.getenv("SHELL") ?: "/bin/sh"
-                        // Use -c instead of -lc to rely on EnvironmentUtil's captured environment
-                        // and avoid potential issues with double-sourcing shell profiles.
-                        GeneralCommandLine(shell, "-c", cmd)
+                    val result = runCommand(project, c.command, timeoutMs)
+                    details += result.details
+                    if (!result.success) {
+                        failures += FailureDetail(c, result.details)
                     }
-                    project.basePath?.let { commandLine.withWorkDirectory(it) }
-
-                    if (!isWindows()) {
-                        try {
-                            val env = EnvironmentUtil.getEnvironmentMap()
-                            commandLine.withEnvironment(env)
-                        } catch (e: Exception) {
-                            // Ignore if we can't get the environment
+                    allOk = allOk && result.success
+                }
+                is AcceptanceCriterion.NoTestsFail -> {
+                    var cmd: String? = null
+                    runReadAction {
+                        val baseDir = project.basePath?.let { LocalFileSystem.getInstance().findFileByPath(it) }
+                        if (baseDir != null) {
+                            if (baseDir.findChild("gradlew") != null) {
+                                cmd = if (isWindows()) "gradlew.bat test" else "./gradlew test"
+                            } else if (baseDir.findChild("mvnw") != null) {
+                                cmd = if (isWindows()) "mvnw.cmd test" else "./mvnw test"
+                            } else if (baseDir.findChild("package.json") != null) {
+                                cmd = if (baseDir.findChild("yarn.lock") != null) "yarn test" else "npm test"
+                            }
                         }
                     }
 
-                    val handler = CapturingProcessHandler(commandLine)
-                    val output = handler.runProcess(timeoutMs)
-                    val ok = output.exitCode == 0
-
-                    val sb = StringBuilder()
-                    if (ok) {
-                        sb.append("✔ Command succeeded: $cmd")
-                    } else {
-                        sb.append("✘ Command failed ($cmd): exit=${output.exitCode}")
-                        sb.append("\nWorking Dir: ${commandLine.workDirectory}")
-                        sb.append("\nSTDOUT:\n${output.stdout}")
-                        sb.append("\nSTDERR:\n${output.stderr}")
-
-                        // Heuristic for missing dependencies
-                        if (output.stderr.contains("not installed", ignoreCase = true) ||
-                            output.stderr.contains("command not found", ignoreCase = true)) {
-                            sb.append("\n\nHINT: You may need to run 'npm install' or 'yarn install' in your project.")
+                    if (cmd != null) {
+                        val result = runCommand(project, cmd!!, timeoutMs)
+                        details += result.details
+                        if (!result.success) {
+                            failures += FailureDetail(c, result.details)
                         }
-                        failures += FailureDetail(c, sb.toString())
+                        allOk = allOk && result.success
+                    } else {
+                        val msg = "⚠ Could not determine test command for 'No tests fail'."
+                        details += msg
+                        failures += FailureDetail(c, msg)
+                        allOk = false
                     }
-                    details += sb.toString()
-                    allOk = allOk && ok
+                }
+                is AcceptanceCriterion.ManualVerification -> {
+                    details += "⚠ Manual verification required: ${c.description}"
                 }
             }
         }
         return VerificationResult(allOk, details, failures)
+    }
+
+    private data class CommandResult(val success: Boolean, val details: String)
+
+    private fun runCommand(project: Project, cmd: String, timeoutMs: Int): CommandResult {
+        val commandLine = if (isWindows()) {
+            GeneralCommandLine("cmd", "/c", cmd)
+        } else {
+            val shell = System.getenv("SHELL") ?: "/bin/sh"
+            GeneralCommandLine(shell, "-c", cmd)
+        }
+        project.basePath?.let { commandLine.withWorkDirectory(it) }
+
+        if (!isWindows()) {
+            try {
+                val env = EnvironmentUtil.getEnvironmentMap()
+                commandLine.withEnvironment(env)
+            } catch (e: Exception) {
+                // Ignore
+            }
+        }
+
+        val handler = CapturingProcessHandler(commandLine)
+        val output = handler.runProcess(timeoutMs)
+        val ok = output.exitCode == 0
+
+        val sb = StringBuilder()
+        if (ok) {
+            sb.append("✔ Command succeeded: $cmd")
+        } else {
+            sb.append("✘ Command failed ($cmd): exit=${output.exitCode}")
+            sb.append("\nWorking Dir: ${commandLine.workDirectory}")
+            sb.append("\nSTDOUT:\n${output.stdout}")
+            sb.append("\nSTDERR:\n${output.stderr}")
+
+            if (output.stderr.contains("not installed", ignoreCase = true) ||
+                output.stderr.contains("command not found", ignoreCase = true)) {
+                sb.append("\n\nHINT: You may need to run 'npm install' or 'yarn install' in your project.")
+            }
+        }
+        return CommandResult(ok, sb.toString())
     }
 
     private fun isWindows(): Boolean = System.getProperty("os.name").lowercase().contains("win")

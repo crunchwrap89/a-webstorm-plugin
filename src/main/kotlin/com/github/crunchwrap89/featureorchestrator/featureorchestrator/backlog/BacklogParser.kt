@@ -123,7 +123,12 @@ object BacklogParser {
                         spec.startsWith("Command succeeds:", ignoreCase = true) -> {
                             list += AcceptanceCriterion.CommandSucceeds(spec.substringAfter(":").trim())
                         }
-                        // Ignore other criteria without warning
+                        spec.equals("No tests fail", ignoreCase = true) -> {
+                            list += AcceptanceCriterion.NoTestsFail
+                        }
+                        else -> {
+                            list += AcceptanceCriterion.ManualVerification(spec)
+                        }
                     }
                 }
                 else -> {

@@ -61,6 +61,7 @@ class BacklogParserTest {
             - Route `/about` renders without errors
             - Visual style matches existing pages
             - Command succeeds: npm run build
+            - No tests fail
             
             ---
         """.trimIndent()
@@ -70,6 +71,13 @@ class BacklogParserTest {
         assertTrue("Should have no warnings: ${backlog.warnings}", backlog.warnings.isEmpty())
         assertEquals(1, backlog.features.size)
         val feature = backlog.features[0]
-        assertEquals(2, feature.acceptanceCriteria.size)
+        assertEquals(5, feature.acceptanceCriteria.size)
+
+        val criteria = feature.acceptanceCriteria
+        assertTrue(criteria[0] is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.FileExists)
+        assertTrue(criteria[1] is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.ManualVerification)
+        assertTrue(criteria[2] is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.ManualVerification)
+        assertTrue(criteria[3] is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.CommandSucceeds)
+        assertTrue(criteria[4] is com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion.NoTestsFail)
     }
 }

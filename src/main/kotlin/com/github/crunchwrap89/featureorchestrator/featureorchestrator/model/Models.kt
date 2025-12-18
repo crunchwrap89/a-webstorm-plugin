@@ -25,6 +25,8 @@ enum class Section {
 sealed interface AcceptanceCriterion {
     data class FileExists(val relativePath: String) : AcceptanceCriterion
     data class CommandSucceeds(val command: String) : AcceptanceCriterion
+    object NoTestsFail : AcceptanceCriterion
+    data class ManualVerification(val description: String) : AcceptanceCriterion
 }
 
 enum class OrchestratorState {
