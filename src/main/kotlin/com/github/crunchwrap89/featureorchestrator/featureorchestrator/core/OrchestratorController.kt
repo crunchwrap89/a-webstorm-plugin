@@ -88,6 +88,7 @@ class OrchestratorController(private val project: Project, private val listener:
     fun validateBacklog() {
         val backlogFile = backlogService.backlogFile()
         if (backlogFile == null) {
+            setState(OrchestratorState.IDLE)
             listener.onBacklogStatusChanged(BacklogStatus.MISSING)
             listener.onFeaturePreview(null)
             listener.onNavigationStateChanged(false, false)
@@ -95,6 +96,7 @@ class OrchestratorController(private val project: Project, private val listener:
         }
         val backlog = backlogService.parseBacklog()
         if (backlog == null) {
+            setState(OrchestratorState.IDLE)
             listener.onBacklogStatusChanged(BacklogStatus.NO_FEATURES)
             listener.onFeaturePreview(null)
             listener.onNavigationStateChanged(false, false)
@@ -108,6 +110,7 @@ class OrchestratorController(private val project: Project, private val listener:
         availableFeatures = backlog.features.filter { !it.checked }
 
         if (availableFeatures.isEmpty()) {
+            setState(OrchestratorState.IDLE)
             currentFeatureIndex = 0
             listener.onBacklogStatusChanged(BacklogStatus.NO_FEATURES)
             listener.onFeaturePreview(null)

@@ -2,7 +2,19 @@
 
 # Feature Orchestrator Changelog
 
-## [Unreleased]
+## [1.1.1] - 2025-12-18
+### Fixed
+- Status initially "Awaiting AI Agent"
+
+## [1.1.0] - 2025-12-18
+### Added
+- Enchanced UI
+- Improved execution log
+- Improved automatic validation
+- Added more settings options
+- Fixed minor bugs
+
+## [1.0.0] - 2025-12-17
 ### Added
 - MVP of Feature Orchestrator plugin for JetBrains IDEs.
 - Automatically creates BACKLOG.md file if not present in the project.
