@@ -17,6 +17,7 @@ import com.intellij.ui.IdeBorderFactory
 import com.intellij.util.ui.JBUI
 import com.intellij.ui.OnePixelSplitter
 import java.awt.BorderLayout
+import java.awt.CardLayout
 import java.awt.Dimension
 import java.awt.FlowLayout
 import javax.swing.JButton
@@ -64,20 +65,27 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     private val controller = OrchestratorController(project, this)
     private var lastStatus: BacklogStatus = BacklogStatus.OK
 
+    // Accessible variable for navPanel
+    private lateinit var centerNavPanel: JBPanel<JBPanel<*>>
+    private val createBacklogButton = JButton("Create Backlog").apply {
+        addActionListener { controller.createOrUpdateBacklog() }
+    }
+
     init {
+        preferredSize = Dimension(600, 600)
         val featureCard = JBPanel<JBPanel<*>>(BorderLayout()).apply {
             border = IdeBorderFactory.createRoundedBorder()
 
-            val titlePanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
-                border = JBUI.Borders.empty(5)
-                add(JBLabel("Feature").apply { font = JBUI.Fonts.label().asBold() }, BorderLayout.WEST)
-            }
-            add(titlePanel, BorderLayout.NORTH)
-
             val contentPanel = JBPanel<JBPanel<*>>(BorderLayout())
+
+            centerNavPanel = JBPanel<JBPanel<*>>(CardLayout()).apply {
+                add(featureName, "LABEL")
+                add(createBacklogButton, "BUTTON")
+            }
+
             val navPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
                 add(prevButton, BorderLayout.WEST)
-                add(featureName, BorderLayout.CENTER)
+                add(centerNavPanel, BorderLayout.CENTER)
                 add(nextButton, BorderLayout.EAST)
             }
             contentPanel.add(navPanel, BorderLayout.NORTH)
@@ -187,7 +195,9 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
             OrchestratorState.FAILED -> statusIndicator.foreground = JBColor.RED
         }
         verifyButton.isEnabled = (state == OrchestratorState.AWAITING_AI || state == OrchestratorState.HANDOFF || state == OrchestratorState.FAILED)
-        runButton.isEnabled = (state == OrchestratorState.IDLE || state == OrchestratorState.FAILED || state == OrchestratorState.COMPLETED || state == OrchestratorState.AWAITING_AI)
+
+        val canRun = (state == OrchestratorState.IDLE || state == OrchestratorState.FAILED || state == OrchestratorState.COMPLETED || state == OrchestratorState.AWAITING_AI)
+        runButton.isEnabled = canRun && lastStatus == BacklogStatus.OK
     }
 
     override fun onLog(message: String) {
@@ -205,30 +215,52 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
     override fun onBacklogStatusChanged(status: BacklogStatus) {
         lastStatus = status
+        val cardLayout = centerNavPanel.layout as CardLayout
         when (status) {
             BacklogStatus.MISSING -> {
-                featureName.text = "Backlog Missing"
-                featureDesc.text = "No backlog.md found in project root."
+                featureDesc.text = "No BACKLOG.md found in project root. Press Create Backlog to generate a template."
                 acceptanceCriteriaArea.text = ""
-                runButton.isVisible = false
-                editBacklogButton.isVisible = true
-                editBacklogButton.text = "Create Backlog"
+                runButton.isVisible = true
+                runButton.isEnabled = false
+                editBacklogButton.isVisible = false // Hide the bottom one
                 prevButton.isEnabled = false
                 nextButton.isEnabled = false
+
+                cardLayout.show(centerNavPanel, "BUTTON")
             }
             BacklogStatus.NO_FEATURES -> {
                 featureName.text = "No Features"
                 featureDesc.text = "No unchecked features found in backlog.md."
                 acceptanceCriteriaArea.text = ""
-                runButton.isVisible = false
+                runButton.isVisible = true
+                runButton.isEnabled = false
                 editBacklogButton.isVisible = true
                 editBacklogButton.text = "Add Feature"
                 prevButton.isEnabled = false
                 nextButton.isEnabled = false
+
+                cardLayout.show(centerNavPanel, "LABEL")
             }
             BacklogStatus.OK -> {
                 runButton.isVisible = true
+                runButton.isEnabled = true // Will be updated by onStateChanged logic if needed, but good to reset here or rely on onStateChanged if called.
+                // Actually onStateChanged logic relies on lastStatus which is updated above.
+                // We should probably trigger a state update or just set it here based on current controller state if we could access it,
+                // but controller state isn't exposed directly here except via listener.
+                // However, usually validateBacklog is called which triggers this.
+                // Let's just set it to true here, and if state is not IDLE/etc it might be wrong until next state change?
+                // Better to re-evaluate enablement based on controller state if possible, or just let it be true as default for OK.
+                // But wait, if we are in VERIFYING state, runButton should be disabled.
+                // We don't have access to controller.state directly (it's private set in controller, but we can access it via getter if public).
+                // Controller has `var state: OrchestratorState` which is public get.
+
+                val state = controller.state
+                val canRun = (state == OrchestratorState.IDLE || state == OrchestratorState.FAILED || state == OrchestratorState.COMPLETED || state == OrchestratorState.AWAITING_AI)
+                runButton.isEnabled = canRun
+
                 editBacklogButton.isVisible = false
+
+                cardLayout.show(centerNavPanel, "LABEL")
             }
         }
     }

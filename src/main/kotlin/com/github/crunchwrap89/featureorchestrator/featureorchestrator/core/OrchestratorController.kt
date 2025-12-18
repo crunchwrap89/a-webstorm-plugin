@@ -187,7 +187,6 @@ class OrchestratorController(private val project: Project, private val listener:
 
         // If we are already awaiting AI for the same feature, just re-handoff and return
         if (state == OrchestratorState.AWAITING_AI && session?.feature?.name == feature.name) {
-            info("Prompt copied to clipboard again.")
             return
         }
 
