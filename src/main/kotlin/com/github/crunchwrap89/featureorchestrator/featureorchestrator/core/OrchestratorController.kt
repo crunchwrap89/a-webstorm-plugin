@@ -302,7 +302,7 @@ class OrchestratorController(private val project: Project, private val listener:
             PromptHandoffBehavior.AUTO_COPILOT -> {
                 info("Prompt copied to clipboard. Opening Copilot...")
                 // Try common IDs for Copilot Chat
-                openToolWindow("copilot.chat.show")
+                openToolWindow("Github Copilot Chat") || openToolWindow("Copilot Chat")
             }
             PromptHandoffBehavior.AUTO_AI_ASSISTANT -> {
                 info("Prompt copied to clipboard. Opening AI Assistant...")
