@@ -66,6 +66,8 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
 
         // Create test.txt
         myFixture.addFileToProject("test.txt", "content")
+        Thread.sleep(500)
+        com.intellij.openapi.vfs.LocalFileSystem.getInstance().refresh(true)
 
         // Verify again - should succeed
         controller.verifyNow()
