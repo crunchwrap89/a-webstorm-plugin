@@ -7,6 +7,8 @@
 ### Fixed
 
 - Resolved deprecated API usage warnings
+- Added tests
+- Fixed copilot auto open chat window
 
 ## [1.1.4] - 2025-12-19
 
