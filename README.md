@@ -5,9 +5,8 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
 
 <!-- Plugin description -->
+A repeatable and mostly automatic workflow to plan, generate prompts, verify code and manage your backlog without leaving your IDE.
 > ** Plan → Generate prompt → AI Work → Verify implementation → Mark as completed **
-
-A repeatable and mostly automatic workflow to plan, generate prompts, verify implementations and manage your backlog without leaving your IDE.
 
 - Today you write prompts and refine your backlog as two different work tasks, why not combine the two?
 - Today you go to a separate tool, such as jira or trello to find out what feature to work on next. Why not keep track of it in your IDE and in your codebase?
