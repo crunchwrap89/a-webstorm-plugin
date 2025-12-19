@@ -86,7 +86,7 @@ object AcceptanceVerifier {
                     }
 
                     if (cmd != null) {
-                        val result = runCommand(project, cmd!!, timeoutMs)
+                        val result = runCommand(project, cmd, timeoutMs)
                         details += result.details
                         if (!result.success) {
                             failures += FailureDetail(c, result.details)

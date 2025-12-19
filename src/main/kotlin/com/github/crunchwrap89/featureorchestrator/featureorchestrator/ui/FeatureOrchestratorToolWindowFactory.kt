@@ -24,6 +24,10 @@ import javax.swing.JButton
 import javax.swing.JTextArea
 
 class FeatureOrchestratorToolWindowFactory : ToolWindowFactory {
+    override suspend fun isApplicableAsync(project: Project): Boolean {
+        return true
+    }
+
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val panel = FeatureOrchestratorPanel(project)
         val content = ContentFactory.getInstance().createContent(panel, null, false)
@@ -68,10 +72,14 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     private val controller = OrchestratorController(project, this)
     private var lastStatus: BacklogStatus = BacklogStatus.OK
 
-    // Accessible variable for navPanel
-    private lateinit var centerNavPanel: JBPanel<JBPanel<*>>
     private val createBacklogButton = JButton("Create Backlog").apply {
         addActionListener { controller.createOrUpdateBacklog() }
+    }
+
+    // Accessible variable for navPanel
+    private val centerNavPanel = JBPanel<JBPanel<*>>(CardLayout()).apply {
+        add(featureName, "LABEL")
+        add(createBacklogButton, "BUTTON")
     }
 
     init {
@@ -81,10 +89,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
             val contentPanel = JBPanel<JBPanel<*>>(BorderLayout())
 
-            centerNavPanel = JBPanel<JBPanel<*>>(CardLayout()).apply {
-                add(featureName, "LABEL")
-                add(createBacklogButton, "BUTTON")
-            }
 
             val navPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
                 add(prevButton, BorderLayout.WEST)

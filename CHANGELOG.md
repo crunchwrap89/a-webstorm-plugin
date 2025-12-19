@@ -2,7 +2,27 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2025-12-19
+
+### Fixed
+
+- Resolved deprecated API usage warnings
+
+## [1.1.4] - 2025-12-19
+
+### Added
+
+- Added logo to Marketplace listing
+- Updated readme
+
+## [1.1.3] - 2025-12-19
+
+### Fixed
+
+- Fixed issue with settings not being saved properly
+
 ## [1.1.2] - 2025-12-18
+
 ### Fixed
 
 - Fixed build failure related to PluginManagerConfigurable
@@ -37,7 +57,10 @@
 - Plugin settings to customize behavior and preferences.
 - Have your features tracked in Git and easily check which changes are related to which feature.
 
-[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.2...HEAD
+[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.5...HEAD
+[1.1.5]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.4...v1.1.5
+[1.1.4]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.3...v1.1.4
+[1.1.3]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.0.0...v1.1.0
