@@ -3,7 +3,9 @@
 ## [Unreleased]
 
 ## [1.1.6] - 2025-12-19
+
 ### Fixed
+
 - Fixed readme
 
 ## [1.1.5] - 2025-12-19
@@ -63,7 +65,8 @@
 - Plugin settings to customize behavior and preferences.
 - Have your features tracked in Git and easily check which changes are related to which feature.
 
-[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.5...HEAD
+[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.6...HEAD
+[1.1.6]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.2...v1.1.3

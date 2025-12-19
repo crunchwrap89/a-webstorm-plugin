@@ -13,7 +13,7 @@ A repeatable workflow to plan, generate prompts, verify AI implementations and m
 - Today you write follow-up prompts manually if something fails, why not automate that prompt generation?
 - Today you return to your ticket management tool to manually mark your feature as done. Why not automate this? 
 
-Feature Orchestrator fixes all of this by combining feature planning, AI prompt generation, implementation verification and backlog management into a single, repeatable workflow so you can spend less time in ticket management systems and less time writing AI Prompts.
+Feature Orchestrator fixes all of this by combining feature planning, AI prompt generation, implementation verification and backlog management into a single, repeatable workflow so you can spend less time writing AI Prompts while also spending less time in a bloated ticket management system.
 
 > ** Plan → Generate prompt → AI Work → Verify implementation → Mark as completed **
 
