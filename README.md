@@ -5,8 +5,7 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
 
 <!-- Plugin description -->
-
-# Feature Orchestrator
+A repeatable workflow to plan, generate prompts, verify AI implementations and manage your backlog without leaving your IDE.
 
 - Today you write prompts and refine your backlog as two different work tasks, why not combine the two?
 - Today you go to a separate tool, such as jira or trello to find out what feature to work on next. Why not keep track of it in your IDE and in your codebase?
@@ -14,7 +13,7 @@
 - Today you write follow-up prompts manually if something fails, why not automate that prompt generation?
 - Today you return to your ticket management tool to manually mark your feature as done. Why not automate this? 
 
-**Feature Orchestrator** fixes all of this by combining feature planning, AI prompt generation, implementation verification and backlog management into a single, repeatable workflow so you can spend less time in ticket management systems and less time writing AI Prompts.
+Feature Orchestrator fixes all of this by combining feature planning, AI prompt generation, implementation verification and backlog management into a single, repeatable workflow so you can spend less time in ticket management systems and less time writing AI Prompts.
 
 > ** Plan → Generate prompt → AI Work → Verify implementation → Mark as completed **
 

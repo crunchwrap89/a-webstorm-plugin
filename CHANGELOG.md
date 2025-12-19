@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.1.6] - 2025-12-19
+### Fixed
+- Fixed readme
+
 ## [1.1.5] - 2025-12-19
 
 ### Fixed
