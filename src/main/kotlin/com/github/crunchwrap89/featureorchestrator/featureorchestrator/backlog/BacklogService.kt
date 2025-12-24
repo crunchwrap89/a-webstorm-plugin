@@ -95,7 +95,7 @@ We also sell drones and underwater ROVs, so there should be a section highlighti
         val basePath = project.basePath ?: return
         val baseDir = LocalFileSystem.getInstance().findFileByPath(basePath) ?: return
 
-        WriteCommandAction.runWriteCommandAction(project, "Create Backlog Template", null, Runnable {
+        WriteCommandAction.runWriteCommandAction(project, "Create Backlog Template", null, {
             try {
                 val file = baseDir.createChildData(this, "BACKLOG.md")
                 val doc = FileDocumentManager.getInstance().getDocument(file)
@@ -111,7 +111,7 @@ We also sell drones and underwater ROVs, so there should be a section highlighti
         val file = backlogFile() ?: return
         val doc = FileDocumentManager.getInstance().getDocument(file) ?: return
 
-        WriteCommandAction.runWriteCommandAction(project, "Append Backlog Template", null, Runnable {
+        WriteCommandAction.runWriteCommandAction(project, "Append Backlog Template", null, {
             try {
                 val text = doc.text
                 val prefix = if (text.isNotEmpty() && !text.endsWith("\n")) "\n\n" else if (text.isNotEmpty()) "\n" else ""
@@ -126,7 +126,7 @@ We also sell drones and underwater ROVs, so there should be a section highlighti
     fun removeFeature(feature: BacklogFeature) {
         val vf = backlogFile() ?: return
         val doc = FileDocumentManager.getInstance().getDocument(vf) ?: return
-        WriteCommandAction.runWriteCommandAction(project, "Remove Feature", null, Runnable {
+        WriteCommandAction.runWriteCommandAction(project, "Remove Feature", null, {
             removeFeatureBlock(doc.text, feature.rawBlock, doc)
             FileDocumentManager.getInstance().saveDocument(doc)
         })
@@ -136,60 +136,60 @@ We also sell drones and underwater ROVs, so there should be a section highlighti
         val vf = backlogFile() ?: return false
         val doc = FileDocumentManager.getInstance().getDocument(vf) ?: return false
         return try {
-            WriteCommandAction.runWriteCommandAction(project, "Update Backlog", null, Runnable {
+            WriteCommandAction.runWriteCommandAction(project, "Update Backlog", null, {
                 val text = doc.text
                 val parsed = BacklogParser.parse(text)
                 val target = parsed.features.firstOrNull { !it.checked && it.name == feature.name }
                 if (target == null) {
                     log.warn("Feature '${feature.name}' not found or already checked. Skipping update.")
-                    return@Runnable
-                }
-                when (behavior) {
-                    CompletionBehavior.CHECK_OFF -> {
-                        // Try to find line with checkbox first
-                        var oldLineRegex = Regex("""^\[ ] +${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
-                        if (!oldLineRegex.containsMatchIn(text)) {
-                            // Try without checkbox
-                            oldLineRegex = Regex("""^${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
-                        }
-                        val newText = text.replace(oldLineRegex, "[x] ${feature.name}")
-                        doc.setText(newText)
-                    }
-                    CompletionBehavior.REMOVE_FEATURE -> {
-                        removeFeatureBlock(text, target.rawBlock, doc)
-                    }
-                    CompletionBehavior.MOVE_TO_COMPLETED -> {
-                        // 1. Append to completed.md
-                        val parentDir = vf.parent
-                        var completedFile = parentDir.findChild("COMPLETED.md") ?: parentDir.findChild("completed.md")
-                        if (completedFile == null) {
-                            completedFile = parentDir.createChildData(this, "COMPLETED.md")
-                            val d = FileDocumentManager.getInstance().getDocument(completedFile)
-                            d?.setText("# Completed Features\n\n---\n")
-                        }
-                        val completedDoc = FileDocumentManager.getInstance().getDocument(completedFile)
-                        if (completedDoc != null) {
-                            val currentText = completedDoc.text
-                            var prefix = ""
-                            if (currentText.isNotEmpty() && !currentText.endsWith("\n")) prefix += "\n"
-
-                            // Mark as checked in the moved block
-                            var checkedBlock = target.rawBlock
-                            if (checkedBlock.contains("[ ]")) {
-                                checkedBlock = checkedBlock.replaceFirst("[ ]", "[x]")
-                            } else {
-                                // If no checkbox, add one
-                                checkedBlock = checkedBlock.replaceFirst(feature.name, "[x] ${feature.name}")
+                } else {
+                    when (behavior) {
+                        CompletionBehavior.CHECK_OFF -> {
+                            // Try to find line with checkbox first
+                            var oldLineRegex = Regex("""^\[ ] +${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
+                            if (!oldLineRegex.containsMatchIn(text)) {
+                                // Try without checkbox
+                                oldLineRegex = Regex("""^${Regex.escape(feature.name)}\s*$""", RegexOption.MULTILINE)
                             }
-                            completedDoc.setText(currentText + prefix + checkedBlock + "\n\n---")
-                            FileDocumentManager.getInstance().saveDocument(completedDoc)
+                            val newText = text.replace(oldLineRegex, "[x] ${feature.name}")
+                            doc.setText(newText)
                         }
+                        CompletionBehavior.REMOVE_FEATURE -> {
+                            removeFeatureBlock(text, target.rawBlock, doc)
+                        }
+                        CompletionBehavior.MOVE_TO_COMPLETED -> {
+                            // 1. Append to completed.md
+                            val parentDir = vf.parent
+                            var completedFile = parentDir.findChild("COMPLETED.md") ?: parentDir.findChild("completed.md")
+                            if (completedFile == null) {
+                                completedFile = parentDir.createChildData(this, "COMPLETED.md")
+                                val d = FileDocumentManager.getInstance().getDocument(completedFile)
+                                d?.setText("# Completed Features\n\n---\n")
+                            }
+                            val completedDoc = FileDocumentManager.getInstance().getDocument(completedFile)
+                            if (completedDoc != null) {
+                                val currentText = completedDoc.text
+                                var prefix = ""
+                                if (currentText.isNotEmpty() && !currentText.endsWith("\n")) prefix += "\n"
 
-                        // 2. Remove from backlog.md
-                        removeFeatureBlock(text, target.rawBlock, doc)
+                                // Mark as checked in the moved block
+                                var checkedBlock = target.rawBlock
+                                if (checkedBlock.contains("[ ]")) {
+                                    checkedBlock = checkedBlock.replaceFirst("[ ]", "[x]")
+                                } else {
+                                    // If no checkbox, add one
+                                    checkedBlock = checkedBlock.replaceFirst(feature.name, "[x] ${feature.name}")
+                                }
+                                completedDoc.setText(currentText + prefix + checkedBlock + "\n\n---")
+                                FileDocumentManager.getInstance().saveDocument(completedDoc)
+                            }
+
+                            // 2. Remove from backlog.md
+                            removeFeatureBlock(text, target.rawBlock, doc)
+                        }
                     }
+                    FileDocumentManager.getInstance().saveDocument(doc)
                 }
-                FileDocumentManager.getInstance().saveDocument(doc)
             })
             true
         } catch (e: Exception) {

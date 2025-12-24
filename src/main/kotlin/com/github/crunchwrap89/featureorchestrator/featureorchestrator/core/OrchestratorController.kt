@@ -145,6 +145,43 @@ class OrchestratorController(private val project: Project, private val listener:
         }
     }
 
+    fun addFeature() {
+        backlogService.appendTemplateToBacklog()
+        val file = backlogService.backlogFile()
+        if (file != null) {
+            val editors = FileEditorManager.getInstance(project).openFile(file, true)
+            val textEditor = editors.firstOrNull { it is com.intellij.openapi.fileEditor.TextEditor } as? com.intellij.openapi.fileEditor.TextEditor
+            textEditor?.editor?.let { editor ->
+                editor.scrollingModel.scrollTo(com.intellij.openapi.editor.LogicalPosition(editor.document.lineCount - 1, 0), com.intellij.openapi.editor.ScrollType.CENTER)
+            }
+        }
+        validateBacklog()
+    }
+
+    fun editFeature() {
+        if (availableFeatures.isNotEmpty() && currentFeatureIndex in availableFeatures.indices) {
+            val feature = availableFeatures[currentFeatureIndex]
+            val file = backlogService.backlogFile() ?: return
+            val editors = FileEditorManager.getInstance(project).openFile(file, true)
+            val textEditor = editors.firstOrNull { it is com.intellij.openapi.fileEditor.TextEditor } as? com.intellij.openapi.fileEditor.TextEditor
+            textEditor?.editor?.let { editor ->
+                editor.caretModel.moveToOffset(feature.blockStartOffset)
+                editor.scrollingModel.scrollToCaret(com.intellij.openapi.editor.ScrollType.CENTER)
+            }
+        }
+    }
+
+    fun removeFeature() {
+        if (availableFeatures.isNotEmpty() && currentFeatureIndex in availableFeatures.indices) {
+            val feature = availableFeatures[currentFeatureIndex]
+            val confirm = Messages.showYesNoDialog(project, "Are you sure you want to remove feature '${feature.name}'?", "Remove Feature", Messages.getQuestionIcon())
+            if (confirm == Messages.YES) {
+                backlogService.removeFeature(feature)
+                validateBacklog()
+            }
+        }
+    }
+
     private fun updateFeaturePreview() {
         if (availableFeatures.isNotEmpty() && currentFeatureIndex in availableFeatures.indices) {
             listener.onFeaturePreview(availableFeatures[currentFeatureIndex])
@@ -361,7 +398,6 @@ class OrchestratorController(private val project: Project, private val listener:
         vfsConnection = project.messageBus.connect().also { conn ->
             conn.subscribe(VirtualFileManager.VFS_CHANGES, object : BulkFileListener {
                 override fun after(events: MutableList<out VFileEvent>) {
-                    val idx = project.basePath
                     events.forEach { e ->
                         val vf = e.file ?: return@forEach
                         if (isProjectContent(vf)) {

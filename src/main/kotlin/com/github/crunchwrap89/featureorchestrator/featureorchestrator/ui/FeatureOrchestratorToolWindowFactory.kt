@@ -69,6 +69,19 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         addActionListener { logArea.text = "" }
     }
 
+    private val addFeatureButton = JButton("+").apply {
+        toolTipText = "Add Feature"
+        addActionListener { controller.addFeature() }
+    }
+    private val editFeatureButton = JButton("✎").apply {
+        toolTipText = "Edit Feature"
+        addActionListener { controller.editFeature() }
+    }
+    private val removeFeatureButton = JButton("-").apply {
+        toolTipText = "Remove Feature"
+        addActionListener { controller.removeFeature() }
+    }
+
     private val controller = OrchestratorController(project, this)
     private var lastStatus: BacklogStatus = BacklogStatus.OK
 
@@ -95,7 +108,19 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
                 add(centerNavPanel, BorderLayout.CENTER)
                 add(nextButton, BorderLayout.EAST)
             }
-            contentPanel.add(navPanel, BorderLayout.NORTH)
+
+            val featureActionsPanel = JBPanel<JBPanel<*>>(FlowLayout(FlowLayout.CENTER, 5, 0)).apply {
+                add(addFeatureButton)
+                add(editFeatureButton)
+                add(removeFeatureButton)
+            }
+
+            val navContainer = JBPanel<JBPanel<*>>(BorderLayout()).apply {
+                add(featureActionsPanel, BorderLayout.NORTH)
+                add(navPanel, BorderLayout.CENTER)
+            }
+
+            contentPanel.add(navContainer, BorderLayout.NORTH)
             val scrollPane = JBScrollPane(featureDesc)
             contentPanel.add(scrollPane, BorderLayout.CENTER)
 
@@ -158,6 +183,8 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
                 border = JBUI.Borders.empty(5)
                 add(JBLabel("Execution Log").apply { font = JBUI.Fonts.label().asBold() }, BorderLayout.WEST)
                 add(JBPanel<JBPanel<*>>().apply {
+                    add(changesLabel)
+                    add(javax.swing.Box.createHorizontalStrut(10))
                     add(statusIndicator)
                     add(statusLabel)
                 }, BorderLayout.EAST)
@@ -234,6 +261,10 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
                 prevButton.isEnabled = false
                 nextButton.isEnabled = false
 
+                addFeatureButton.isEnabled = false
+                editFeatureButton.isEnabled = false
+                removeFeatureButton.isEnabled = false
+
                 createBacklogButton.text = "Create Backlog"
                 cardLayout.show(centerNavPanel, "BUTTON")
             }
@@ -246,6 +277,10 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
                 editBacklogButton.isVisible = false
                 prevButton.isEnabled = false
                 nextButton.isEnabled = false
+
+                addFeatureButton.isEnabled = true
+                editFeatureButton.isEnabled = false
+                removeFeatureButton.isEnabled = false
 
                 createBacklogButton.text = "Add Feature"
                 cardLayout.show(centerNavPanel, "BUTTON")
@@ -269,6 +304,9 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
                 editBacklogButton.isVisible = false
 
+                addFeatureButton.isEnabled = true
+                // edit and remove enablement depends on feature selection, handled in onFeaturePreview
+
                 cardLayout.show(centerNavPanel, "LABEL")
             }
         }
@@ -282,7 +320,10 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     override fun onFeaturePreview(feature: BacklogFeature?) {
         if (lastStatus != BacklogStatus.OK) return
         featureName.text = feature?.let { "${it.name}" } ?: "No feature selected"
-        featureDesc.text = feature?.description?.let { truncate(it, 600) } ?: ""
+        featureDesc.text = feature?.description?.let { truncate(it) } ?: ""
+
+        editFeatureButton.isEnabled = feature != null
+        removeFeatureButton.isEnabled = feature != null
 
         if (feature == null) {
             acceptanceCriteriaArea.text = ""
@@ -331,5 +372,5 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
     }
 
-    private fun truncate(text: String, max: Int): String = if (text.length <= max) text else text.substring(0, max) + "…"
+    private fun truncate(text: String, max: Int = 600): String = if (text.length <= max) text else text.substring(0, max) + "…"
 }
