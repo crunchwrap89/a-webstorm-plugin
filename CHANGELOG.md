@@ -1,12 +1,18 @@
 # Feature Orchestrator Changelog
 
 ## [Unreleased]
+
+## [1.1.8] - 2025-12-24
+
 ### Added
+
 - Improved default feature template
 - add the ability to add, edit and remove feature from the backlog.
 
-## [1.1.7] - 2025-12-20 
+## [1.1.7] - 2025-12-20
+
 ### Fixed
+
 - Fixed issue with copilot chat window not opening
 
 ## [1.1.6] - 2025-12-19
@@ -72,7 +78,9 @@
 - Plugin settings to customize behavior and preferences.
 - Have your features tracked in Git and easily check which changes are related to which feature.
 
-[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.6...HEAD
+[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.8...HEAD
+[1.1.8]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.7...v1.1.8
+[1.1.7]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.4...v1.1.5
 [1.1.4]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.3...v1.1.4
