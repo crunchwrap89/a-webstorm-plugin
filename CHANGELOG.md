@@ -2,7 +2,10 @@
 
 ## [Unreleased]
 
+## [1.1.9] - 2026-01-07
+
 ### Features
+
 - Add a button for mark as completed
 - Add ability to toggle preview acceptance criteria
 - Add ability to add empty feature or configured template feature.
@@ -10,6 +13,7 @@
 - Start at Feature name with cursor when adding new feature
 
 ### Fixed
+
 - Fixed bug were some buttons were not visible at smaller widths.
 
 ## [1.1.8] - 2025-12-24
@@ -88,7 +92,8 @@
 - Plugin settings to customize behavior and preferences.
 - Have your features tracked in Git and easily check which changes are related to which feature.
 
-[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.8...HEAD
+[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.9...HEAD
+[1.1.9]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.8...v1.1.9
 [1.1.8]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.7...v1.1.8
 [1.1.7]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.6...v1.1.7
 [1.1.6]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.5...v1.1.6
