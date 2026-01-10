@@ -52,7 +52,6 @@ class OrchestratorController(private val project: Project, private val listener:
         fun onLog(message: String)
         fun onClearLog()
         fun onFeaturePreview(feature: BacklogFeature?)
-        fun onChangeCountChanged(count: Int)
         fun onPromptGenerated(prompt: String)
         fun onClearPrompt()
         fun onCompletion(success: Boolean)
@@ -407,7 +406,6 @@ class OrchestratorController(private val project: Project, private val listener:
         session = null
         setState(OrchestratorState.IDLE)
         listener.onFeaturePreview(null)
-        listener.onChangeCountChanged(0)
     }
 
     private fun completeSuccess() {
@@ -446,7 +444,6 @@ class OrchestratorController(private val project: Project, private val listener:
                             newSession.changedFiles += vf
                         }
                     }
-                    listener.onChangeCountChanged(newSession.changedFiles.size)
                 }
             })
         }

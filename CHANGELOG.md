@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Features
+- Remove files changed & current status.
+- Remove Add feature button.
+
 ## [1.1.9] - 2026-01-07
 
 ### Features

@@ -41,9 +41,8 @@ class FeatureOrchestratorToolWindowFactory : ToolWindowFactory {
 }
 
 private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<FeatureOrchestratorPanel>(BorderLayout()), OrchestratorController.Listener {
-    private val statusLabel = JBLabel("Status: Idle")
-    private val statusIndicator = JBLabel("●").apply { foreground = JBColor.GRAY }
     private val featureName = JBLabel("", javax.swing.SwingConstants.CENTER)
+    private val emptyBacklogLabel = JBLabel("Backlog is empty", javax.swing.SwingConstants.CENTER)
     private val featureDesc = JTextArea().apply {
         isEditable = false
         lineWrap = true
@@ -63,7 +62,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         wrapStyleWord = true
         rows = 10
     }
-    private val changesLabel = JBLabel("Changed files: 0")
     private val acceptanceCriteriaArea = JTextArea().apply {
         isEditable = false
         lineWrap = true
@@ -117,6 +115,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     private val centerNavPanel = JBPanel<JBPanel<*>>(CardLayout()).apply {
         add(featureName, "LABEL")
         add(createBacklogButton, "BUTTON")
+        add(emptyBacklogLabel, "EMPTY")
     }
 
     init {
@@ -175,12 +174,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
             val logHeader = JBPanel<JBPanel<*>>(BorderLayout()).apply {
                 border = JBUI.Borders.empty(5)
                 add(JBLabel("Execution Log").apply { font = JBUI.Fonts.label().asBold() }, BorderLayout.WEST)
-                add(JBPanel<JBPanel<*>>().apply {
-                    add(changesLabel)
-                    add(javax.swing.Box.createHorizontalStrut(10))
-                    add(statusIndicator)
-                    add(statusLabel)
-                }, BorderLayout.EAST)
             }
 
             add(logHeader, BorderLayout.NORTH)
@@ -209,19 +202,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
     // Listener implementation
     override fun onStateChanged(state: OrchestratorState) {
-        val statusText = when (state) {
-            OrchestratorState.AWAITING_AI -> "Awaiting AI Agent"
-            else -> state.name.lowercase().replaceFirstChar { it.titlecase() }
-        }
-        statusLabel.text = "Status: $statusText"
-        when (state) {
-            OrchestratorState.IDLE -> statusIndicator.foreground = JBColor.GRAY
-            OrchestratorState.HANDOFF -> statusIndicator.foreground = JBColor(0xFFA500, 0xFFA500)
-            OrchestratorState.AWAITING_AI -> statusIndicator.foreground = JBColor.BLUE
-            OrchestratorState.VERIFYING -> statusIndicator.foreground = JBColor(0x6A0DAD, 0x6A0DAD)
-            OrchestratorState.COMPLETED -> statusIndicator.foreground = JBColor.GREEN
-            OrchestratorState.FAILED -> statusIndicator.foreground = JBColor.RED
-        }
         verifyButton.isEnabled = (state == OrchestratorState.AWAITING_AI || state == OrchestratorState.HANDOFF || state == OrchestratorState.FAILED)
 
         val canRun = (state == OrchestratorState.IDLE || state == OrchestratorState.FAILED || state == OrchestratorState.COMPLETED || state == OrchestratorState.AWAITING_AI)
@@ -264,7 +244,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
             }
             BacklogStatus.NO_FEATURES -> {
                 featureName.text = "No Features"
-                featureDesc.text = "No unchecked features found in BACKLOG.md. Press Add Feature to append a new feature template."
+                featureDesc.text = "No features found in BACKLOG.md. Press Add Feature (+) to append a new feature."
                 acceptanceCriteriaArea.text = ""
                 runButton.isVisible = true
                 runButton.isEnabled = false
@@ -277,8 +257,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
                 removeFeatureButton.isEnabled = false
                 completeFeatureButton.isEnabled = false
 
-                createBacklogButton.text = "Add Feature"
-                cardLayout.show(centerNavPanel, "BUTTON")
+                cardLayout.show(centerNavPanel, "EMPTY")
             }
             BacklogStatus.OK -> {
                 runButton.isVisible = true
@@ -356,9 +335,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         acceptanceCriteriaArea.text = sb.toString().trimEnd()
     }
 
-    override fun onChangeCountChanged(count: Int) {
-        changesLabel.text = "Changed files: $count"
-    }
 
     override fun onPromptGenerated(prompt: String) {
 
