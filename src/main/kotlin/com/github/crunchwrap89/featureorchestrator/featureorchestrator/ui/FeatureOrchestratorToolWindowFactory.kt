@@ -5,15 +5,17 @@ import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Bac
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Skill
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.content.ContentFactory
 import com.intellij.ui.IdeBorderFactory
 import com.intellij.util.ui.JBUI
@@ -24,6 +26,8 @@ import java.awt.Dimension
 import java.awt.FlowLayout
 import javax.swing.JButton
 import javax.swing.JTextArea
+import javax.swing.JPanel
+import javax.swing.BoxLayout
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.ui.popup.PopupStep
 import com.intellij.openapi.ui.popup.util.BaseListPopupStep
@@ -72,6 +76,11 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         addActionListener { logArea.text = "" }
     }
 
+    private val skillsPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
+        border = IdeBorderFactory.createTitledBorder("Agent Skills")
+        preferredSize = Dimension(-1, 210)
+    }
+
     private val addFeatureButton = JButton("+").apply {
         toolTipText = "Add Feature"
         addActionListener {
@@ -112,7 +121,8 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     }
 
     // Accessible variable for navPanel
-    private val centerNavPanel = JBPanel<JBPanel<*>>(CardLayout()).apply {
+    private val cardLayout = CardLayout()
+    private val centerNavPanel = JBPanel<JBPanel<*>>(cardLayout).apply {
         add(featureName, "LABEL")
         add(createBacklogButton, "BUTTON")
         add(emptyBacklogLabel, "EMPTY")
@@ -120,6 +130,15 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
     init {
         preferredSize = Dimension(600, 600)
+        
+        // Initial skills loading should be done outside EDT or handled gracefully
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val skills = controller.getAvailableSkills()
+            ApplicationManager.getApplication().invokeLater {
+                refreshSkills(skills)
+            }
+        }
+
         val featureCard = JBPanel<JBPanel<*>>(BorderLayout()).apply {
             border = IdeBorderFactory.createRoundedBorder()
 
@@ -147,6 +166,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
             contentPanel.add(navContainer, BorderLayout.NORTH)
             val scrollPane = JBScrollPane(featureDesc)
             contentPanel.add(scrollPane, BorderLayout.CENTER)
+            contentPanel.add(skillsPanel, BorderLayout.SOUTH)
 
             add(contentPanel, BorderLayout.CENTER)
         }
@@ -223,7 +243,12 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
     override fun onBacklogStatusChanged(status: BacklogStatus) {
         lastStatus = status
-        val cardLayout = centerNavPanel.layout as CardLayout
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val skills = controller.getAvailableSkills()
+            ApplicationManager.getApplication().invokeLater {
+                refreshSkills(skills)
+            }
+        }
         when (status) {
             BacklogStatus.MISSING -> {
                 featureDesc.text = "No BACKLOG.md found in project root. Press Create Backlog to generate a template."
@@ -291,6 +316,15 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         nextButton.isEnabled = hasNext
     }
 
+    override fun onSkillsUpdated() {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val skills = controller.getAvailableSkills()
+            ApplicationManager.getApplication().invokeLater {
+                refreshSkills(skills)
+            }
+        }
+    }
+
     override fun onFeaturePreview(feature: BacklogFeature?) {
         if (lastStatus != BacklogStatus.OK) return
         featureName.text = feature?.let { "${it.name}" } ?: "No feature selected"
@@ -345,6 +379,58 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     }
 
     private fun truncate(text: String, max: Int = 600): String = if (text.length <= max) text else text.substring(0, max) + "…"
+
+    private fun refreshSkills(skills: List<Skill> = emptyList()) {
+        skillsPanel.removeAll()
+        if (skills.isEmpty()) {
+            val emptyPanel = JPanel(BorderLayout())
+            emptyPanel.add(JBLabel("No skills found in .aiassistant/skills/"), BorderLayout.CENTER)
+            val downloadBtn = JButton("Download Agent Skills").apply {
+                addActionListener { controller.downloadSkills() }
+            }
+            emptyPanel.add(downloadBtn, BorderLayout.SOUTH)
+            skillsPanel.add(emptyPanel, BorderLayout.NORTH)
+        } else {
+            val headerPanel = JPanel(BorderLayout())
+            headerPanel.add(JBLabel("Available Skills:"), BorderLayout.WEST)
+            val refreshBtn = JButton("Refresh/Update").apply {
+                preferredSize = Dimension(120, 20)
+                addActionListener { controller.downloadSkills() }
+            }
+            headerPanel.add(refreshBtn, BorderLayout.EAST)
+            skillsPanel.add(headerPanel, BorderLayout.NORTH)
+
+            val listPanel = JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            }
+            skills.forEach { skill ->
+                val nameLabel = JBLabel(skill.name).apply {
+                    toolTipText = skill.description
+                    cursor = java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR)
+                    addMouseListener(object : java.awt.event.MouseAdapter() {
+                        override fun mouseClicked(e: java.awt.event.MouseEvent) {
+                            controller.openSkillFile(skill)
+                        }
+                    })
+                }
+
+                val checkbox = JBCheckBox("", controller.isSkillSelected(skill)).apply {
+                    addActionListener {
+                        controller.toggleSkill(skill)
+                    }
+                }
+                
+                val itemPanel = JPanel(BorderLayout())
+                itemPanel.add(checkbox, BorderLayout.WEST)
+                itemPanel.add(nameLabel, BorderLayout.CENTER)
+                
+                listPanel.add(itemPanel)
+            }
+            skillsPanel.add(JBScrollPane(listPanel), BorderLayout.CENTER)
+        }
+        skillsPanel.revalidate()
+        skillsPanel.repaint()
+    }
 }
 
 private class WrappingPanel(layout: FlowLayout) : JBPanel<WrappingPanel>(layout) {

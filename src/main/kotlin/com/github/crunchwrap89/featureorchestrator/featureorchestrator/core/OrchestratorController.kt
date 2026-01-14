@@ -11,6 +11,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
@@ -27,6 +28,8 @@ import com.intellij.openapi.wm.ToolWindowManager
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Skill
+import com.github.crunchwrap89.featureorchestrator.featureorchestrator.skills.SkillService
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.ui.components.JBCheckBox
 import javax.swing.BoxLayout
@@ -46,6 +49,37 @@ class OrchestratorController(private val project: Project, private val listener:
 
     private var availableFeatures: List<BacklogFeature> = emptyList()
     private var currentFeatureIndex: Int = 0
+    private val selectedSkillPaths = mutableSetOf<String>()
+
+    fun getAvailableSkills(): List<Skill> = project.service<SkillService>().loadSkills()
+
+    fun downloadSkills() {
+        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Downloading Agent Skills", true) {
+            override fun run(indicator: ProgressIndicator) {
+                project.service<SkillService>().downloadSkills(indicator)
+                ApplicationManager.getApplication().invokeLater {
+                    listener.onSkillsUpdated()
+                }
+            }
+        })
+    }
+
+    fun toggleSkill(skill: Skill) {
+        if (selectedSkillPaths.contains(skill.path)) {
+            selectedSkillPaths.remove(skill.path)
+        } else {
+            selectedSkillPaths.add(skill.path)
+        }
+    }
+
+    fun isSkillSelected(skill: Skill): Boolean = selectedSkillPaths.contains(skill.path)
+
+    fun openSkillFile(skill: Skill) {
+        val file = LocalFileSystem.getInstance().findFileByPath(skill.path)
+        if (file != null) {
+            FileEditorManager.getInstance(project).openFile(file, true)
+        }
+    }
 
     interface Listener {
         fun onStateChanged(state: OrchestratorState)
@@ -57,6 +91,7 @@ class OrchestratorController(private val project: Project, private val listener:
         fun onCompletion(success: Boolean)
         fun onBacklogStatusChanged(status: BacklogStatus)
         fun onNavigationStateChanged(hasPrevious: Boolean, hasNext: Boolean)
+        fun onSkillsUpdated()
     }
 
     init {
@@ -65,6 +100,18 @@ class OrchestratorController(private val project: Project, private val listener:
             validateBacklog()
         }
         setupBacklogListener()
+        setupSkillsListener()
+    }
+
+    private fun setupSkillsListener() {
+        val connection = project.messageBus.connect(this)
+        connection.subscribe(SkillService.SkillsUpdateListener.TOPIC, object : SkillService.SkillsUpdateListener {
+            override fun onSkillsUpdated() {
+                ApplicationManager.getApplication().invokeLater {
+                    listener.onSkillsUpdated()
+                }
+            }
+        })
     }
 
     private fun setupBacklogListener() {
@@ -274,7 +321,8 @@ class OrchestratorController(private val project: Project, private val listener:
 
         val feature = availableFeatures[currentFeatureIndex]
 
-        val prompt = PromptGenerator.generate(feature)
+        val selectedSkills = getAvailableSkills().filter { selectedSkillPaths.contains(it.path) }
+        val prompt = PromptGenerator.generate(feature, selectedSkills)
         listener.onPromptGenerated(prompt)
         handoffPrompt(prompt)
 

@@ -29,11 +29,11 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
             override fun onClearLog() {}
             override fun onClearPrompt() {}
             override fun onFeaturePreview(feature: BacklogFeature?) {}
-            override fun onChangeCountChanged(count: Int) {}
             override fun onPromptGenerated(prompt: String) {}
             override fun onCompletion(success: Boolean) {}
             override fun onBacklogStatusChanged(status: BacklogStatus) {}
             override fun onNavigationStateChanged(hasPrevious: Boolean, hasNext: Boolean) {}
+            override fun onSkillsUpdated() {}
         }
         controller = OrchestratorController(project, listener)
     }

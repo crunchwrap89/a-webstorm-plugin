@@ -3,6 +3,15 @@
 ## [Unreleased]
 
 ### Features
+
+- Add support for selecting agent skills
+- Automatically downloads all agentskills in claude code repo
+- Agent skills will be added to the prompt for the selected feature when skills are selected.
+
+## [1.2.0] - 2026-01-10
+
+### Features
+
 - Remove files changed & current status.
 - Remove Add feature button.
 
@@ -96,7 +105,8 @@
 - Plugin settings to customize behavior and preferences.
 - Have your features tracked in Git and easily check which changes are related to which feature.
 
-[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.9...HEAD
+[Unreleased]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.9...v1.2.0
 [1.1.9]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.8...v1.1.9
 [1.1.8]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.7...v1.1.8
 [1.1.7]: https://github.com/crunchwrap89/feature-orchestrator/compare/v1.1.6...v1.1.7

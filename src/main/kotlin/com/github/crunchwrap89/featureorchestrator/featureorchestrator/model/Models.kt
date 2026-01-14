@@ -18,6 +18,12 @@ data class BacklogFeature(
     val blockEndOffset: Int,
 )
 
+data class Skill(
+    val name: String,
+    val description: String,
+    val path: String
+)
+
 enum class Section {
     REQUIREMENTS, OUT_OF_SCOPE, ACCEPTANCE_CRITERIA, NOTES, CONTEXT
 }
