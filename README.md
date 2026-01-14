@@ -5,7 +5,7 @@
 [![Downloads](https://img.shields.io/jetbrains/plugin/d/29407.svg)](https://plugins.jetbrains.com/plugin/29407)
 
 <!-- Plugin description -->
-Feature Orchestrator simplifies your development workflow by combining backlog management, Agent Skill selection, and AI prompt generation into a single, repeatable process.
+Feature Orchestrator simplifies your development workflow by combining backlog management, AI Agent Skill selection, and AI prompt generation into a single, repeatable process.
 
 - **Combines prompt writing and backlog refinement** into a single workflow.
 - **Keeps the feature backlog inside the IDE**, versioned alongside the codebase (no external tools required).
