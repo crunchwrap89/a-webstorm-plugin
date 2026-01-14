@@ -3,6 +3,8 @@ package com.github.crunchwrap89.featureorchestrator.featureorchestrator.skills
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Skill
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.progress.ProgressIndicator
@@ -12,10 +14,13 @@ import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.io.HttpRequests
 import java.io.File
+import java.nio.file.Paths
 
 @Service(Service.Level.PROJECT)
 class SkillService(private val project: Project) {
-    private val skillsDirName = ".aiassistant/skills"
+    private val globalSkillsDir: String by lazy {
+        Paths.get(PathManager.getSystemPath(), "feature-orchestrator", "skills").toString()
+    }
     private val logger = thisLogger()
 
     interface SkillsUpdateListener {
@@ -26,8 +31,11 @@ class SkillService(private val project: Project) {
     }
 
     fun getSkillsDir(): VirtualFile? {
-        val baseDir = project.basePath ?: return null
-        return LocalFileSystem.getInstance().findFileByPath("$baseDir/$skillsDirName")
+        val dir = File(globalSkillsDir)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        return LocalFileSystem.getInstance().refreshAndFindFileByPath(globalSkillsDir)
     }
 
 
@@ -77,8 +85,7 @@ class SkillService(private val project: Project) {
     }
 
     fun initializeDefaultSkillsIfNeeded(indicator: ProgressIndicator? = null) {
-        val baseDir = project.basePath ?: return
-        val skillsDirFile = File(baseDir, skillsDirName)
+        val skillsDirFile = File(globalSkillsDir)
         if (skillsDirFile.exists() && skillsDirFile.list()?.isNotEmpty() == true) {
             return
         }
@@ -87,7 +94,7 @@ class SkillService(private val project: Project) {
     }
 
     fun downloadSkills(indicator: ProgressIndicator? = null) {
-        logger.info("Initializing default skills from GitHub")
+        logger.info("Initializing default skills from GitHub to $globalSkillsDir")
         indicator?.text = "Fetching skills list..."
         try {
             val skillsListUrl = "https://api.github.com/repos/anthropics/skills/contents/skills"
@@ -114,12 +121,11 @@ class SkillService(private val project: Project) {
                 downloadSkill(dir.name, dir.url)
                 
                 // Refresh VFS for the new skill folder
-                val baseDir = project.basePath ?: return@forEachIndexed
-                val skillDirFile = File(baseDir, "$skillsDirName/${dir.name}")
+                val skillDirFile = File(globalSkillsDir, dir.name)
                 LocalFileSystem.getInstance().refreshAndFindFileByIoFile(skillDirFile)
                 
                 // Notify UI after each skill
-                com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+                ApplicationManager.getApplication().invokeLater {
                     project.messageBus.syncPublisher(SkillsUpdateListener.TOPIC).onSkillsUpdated()
                 }
             }
@@ -148,8 +154,7 @@ class SkillService(private val project: Project) {
             val listType = object : TypeToken<List<GithubContent>>() {}.type
             val contents: List<GithubContent> = Gson().fromJson(response, listType)
 
-            val baseDir = project.basePath ?: return
-            val skillDir = File(baseDir, "$skillsDirName/$skillName")
+            val skillDir = File(globalSkillsDir, skillName)
             skillDir.mkdirs()
 
             contents.forEach { content ->

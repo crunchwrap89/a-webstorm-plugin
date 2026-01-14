@@ -88,6 +88,15 @@ class OrchestratorController(private val project: Project, private val listener:
     }
 
     init {
+        // Migration: Remove the project-local skills directory if it exists
+        project.basePath?.let { basePath ->
+            val oldSkillsDir = java.io.File(basePath, ".aiassistant/skills")
+            if (oldSkillsDir.exists()) {
+                oldSkillsDir.deleteRecursively()
+                LocalFileSystem.getInstance().refreshAndFindFileByIoFile(java.io.File(basePath, ".aiassistant"))?.refresh(false, true)
+            }
+        }
+
         // Initial check
         ApplicationManager.getApplication().invokeLater {
             validateBacklog()

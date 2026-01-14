@@ -47,8 +47,8 @@ Feature Orchestrator never runs on its own and never modifies your code or plann
 
 - Solo developers and small teams shipping fast.
 - Developers who want to keep their planning close to their code.
-- Teams using JetBrains AI Assistant.
-- Anyone tired of manually keeping backlogs in sync with reality.
+- Teams using JetBrains AI Assistant or similar tools.
+- Anyone tired of hanging out in Jira or similar tools.
 - Anyone who wants to save mental energy by using a repeatable prompt generation workflow.
 
 ---
