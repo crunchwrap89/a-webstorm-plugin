@@ -16,10 +16,7 @@ class OrchestratorSettingsTest : BasePlatformTestCase() {
 
         println("DEBUG: settings.completionBehavior = ${settings.completionBehavior}")
         assertEquals("Completion behavior should be MOVE_TO_COMPLETED by default", CompletionBehavior.MOVE_TO_COMPLETED, settings.completionBehavior)
-        assertEquals(PromptHandoffBehavior.COPY_TO_CLIPBOARD, settings.promptHandoffBehavior)
-        assertTrue(settings.showNotificationAfterHandoff)
-        assertEquals(600, settings.commandTimeoutSeconds)
-        assertFalse(settings.showAcceptanceCriteria)
+        assertEquals(PromptHandoffBehavior.AUTO_AI_ASSISTANT, settings.promptHandoffBehavior)
         assertTrue(settings.featureTemplate.contains("## Feature name"))
     }
 
@@ -27,18 +24,12 @@ class OrchestratorSettingsTest : BasePlatformTestCase() {
         val settings = project.service<OrchestratorSettings>()
 
         settings.completionBehavior = CompletionBehavior.CHECK_OFF
-        settings.promptHandoffBehavior = PromptHandoffBehavior.AUTO_COPILOT
-        settings.showNotificationAfterHandoff = false
-        settings.commandTimeoutSeconds = 300
-        settings.showAcceptanceCriteria = true
+        settings.promptHandoffBehavior = PromptHandoffBehavior.AUTO_AI_ASSISTANT
         settings.featureTemplate = "New Template"
 
         val state = settings.state
         assertEquals(CompletionBehavior.CHECK_OFF, state.completionBehavior)
-        assertEquals(PromptHandoffBehavior.AUTO_COPILOT, state.promptHandoffBehavior)
-        assertFalse(state.showNotificationAfterHandoff)
-        assertEquals(300, state.commandTimeoutSeconds)
-        assertTrue(state.showAcceptanceCriteria)
+        assertEquals(PromptHandoffBehavior.AUTO_AI_ASSISTANT, state.promptHandoffBehavior)
         assertEquals("New Template", state.featureTemplate)
 
         // Simulate reload
@@ -46,10 +37,7 @@ class OrchestratorSettingsTest : BasePlatformTestCase() {
         newSettings.loadState(state)
 
         assertEquals(CompletionBehavior.CHECK_OFF, newSettings.completionBehavior)
-        assertEquals(PromptHandoffBehavior.AUTO_COPILOT, newSettings.promptHandoffBehavior)
-        assertFalse(newSettings.showNotificationAfterHandoff)
-        assertEquals(300, newSettings.commandTimeoutSeconds)
-        assertTrue(newSettings.showAcceptanceCriteria)
+        assertEquals(PromptHandoffBehavior.AUTO_AI_ASSISTANT, newSettings.promptHandoffBehavior)
         assertEquals("New Template", newSettings.featureTemplate)
     }
 }

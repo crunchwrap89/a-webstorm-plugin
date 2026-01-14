@@ -12,7 +12,6 @@ data class BacklogFeature(
     val checked: Boolean,
     val description: String,
     val optionalSections: Map<Section, String> = emptyMap(),
-    val acceptanceCriteria: List<AcceptanceCriterion> = emptyList(),
     val rawBlock: String,
     val blockStartOffset: Int,
     val blockEndOffset: Int,
@@ -25,18 +24,11 @@ data class Skill(
 )
 
 enum class Section {
-    REQUIREMENTS, OUT_OF_SCOPE, ACCEPTANCE_CRITERIA, NOTES, CONTEXT
-}
-
-sealed interface AcceptanceCriterion {
-    data class FileExists(val relativePath: String) : AcceptanceCriterion
-    data class CommandSucceeds(val command: String) : AcceptanceCriterion
-    object NoTestsFail : AcceptanceCriterion
-    data class ManualVerification(val description: String) : AcceptanceCriterion
+    REQUIREMENTS, OUT_OF_SCOPE, NOTES, CONTEXT
 }
 
 enum class OrchestratorState {
-    IDLE, HANDOFF, AWAITING_AI, VERIFYING, COMPLETED, FAILED
+    IDLE, HANDOFF, AWAITING_AI, COMPLETED, FAILED
 }
 
 enum class BacklogStatus {

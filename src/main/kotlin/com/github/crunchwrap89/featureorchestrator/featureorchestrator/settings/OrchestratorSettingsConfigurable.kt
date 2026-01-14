@@ -35,16 +35,12 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
             override fun customize(list: JList<out PromptHandoffBehavior>, value: PromptHandoffBehavior?, index: Int, selected: Boolean, hasFocus: Boolean) {
                 text = when (value) {
                     PromptHandoffBehavior.COPY_TO_CLIPBOARD -> "Copy prompt to clipboard"
-                    PromptHandoffBehavior.AUTO_COPILOT -> "Automatically add prompt to Copilot AI Agent"
                     PromptHandoffBehavior.AUTO_AI_ASSISTANT -> "Automatically add prompt to AI Assistant"
                     null -> ""
                 }
             }
         }
     }
-    private val showNotificationCheckBox = JBCheckBox("Show notification after prompt generation/verification failure")
-    private val showAcceptanceCriteriaCheckBox = JBCheckBox("Show Acceptance Criteria preview window")
-    private val commandTimeoutField = JBTextField()
     private val featureTemplateArea = JBTextArea(10, 50).apply {
         lineWrap = true
         wrapStyleWord = true
@@ -56,9 +52,6 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
         settingsPanel = FormBuilder.createFormBuilder()
             .addLabeledComponent(JBLabel("Completion behavior:"), completionBehaviorComboBox)
             .addLabeledComponent(JBLabel("Prompt handoff:"), promptHandoffComboBox)
-            .addComponent(showNotificationCheckBox)
-            .addComponent(showAcceptanceCriteriaCheckBox)
-            .addLabeledComponent(JBLabel("Command timeout (seconds):"), commandTimeoutField)
             .addSeparator()
             .addLabeledComponent(JBLabel("New feature template:"), JBScrollPane(featureTemplateArea))
             .addComponentFillVertically(JPanel(), 0)
@@ -70,10 +63,6 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
         val settings = project.service<OrchestratorSettings>()
         var modified = completionBehaviorComboBox.selectedItem != settings.completionBehavior
         modified = modified or (promptHandoffComboBox.selectedItem != settings.promptHandoffBehavior)
-        modified = modified or (showNotificationCheckBox.isSelected != settings.showNotificationAfterHandoff)
-        modified = modified or (showAcceptanceCriteriaCheckBox.isSelected != settings.showAcceptanceCriteria)
-        val timeout = commandTimeoutField.text.toIntOrNull() ?: 600
-        modified = modified or (timeout != settings.commandTimeoutSeconds)
         modified = modified or (featureTemplateArea.text != settings.featureTemplate)
         return modified
     }
@@ -82,9 +71,6 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
         val settings = project.service<OrchestratorSettings>()
         settings.completionBehavior = completionBehaviorComboBox.selectedItem as CompletionBehavior
         settings.promptHandoffBehavior = promptHandoffComboBox.selectedItem as PromptHandoffBehavior
-        settings.showNotificationAfterHandoff = showNotificationCheckBox.isSelected
-        settings.showAcceptanceCriteria = showAcceptanceCriteriaCheckBox.isSelected
-        settings.commandTimeoutSeconds = commandTimeoutField.text.toIntOrNull() ?: 600
         settings.featureTemplate = featureTemplateArea.text
     }
 
@@ -92,9 +78,6 @@ class OrchestratorSettingsConfigurable(private val project: Project) : Configura
         val settings = project.service<OrchestratorSettings>()
         completionBehaviorComboBox.selectedItem = settings.completionBehavior
         promptHandoffComboBox.selectedItem = settings.promptHandoffBehavior
-        showNotificationCheckBox.isSelected = settings.showNotificationAfterHandoff
-        showAcceptanceCriteriaCheckBox.isSelected = settings.showAcceptanceCriteria
-        commandTimeoutField.text = settings.commandTimeoutSeconds.toString()
         featureTemplateArea.text = settings.featureTemplate
     }
 

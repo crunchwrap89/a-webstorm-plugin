@@ -4,11 +4,8 @@ import com.github.crunchwrap89.featureorchestrator.featureorchestrator.core.Orch
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.OrchestratorState
-import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Skill
-import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
@@ -59,14 +56,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
     private val nextButton = JButton(">").apply { isEnabled = false }
     private val runButton = JButton("▶ Generate prompt")
     private val editBacklogButton = JButton("Edit Backlog").apply { isVisible = false }
-    private val verifyButton = JButton("Verify implementation").apply { isEnabled = false }
     private val logArea = JTextArea().apply {
-        isEditable = false
-        lineWrap = true
-        wrapStyleWord = true
-        rows = 10
-    }
-    private val acceptanceCriteriaArea = JTextArea().apply {
         isEditable = false
         lineWrap = true
         wrapStyleWord = true
@@ -174,18 +164,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         val buttons = WrappingPanel(FlowLayout(FlowLayout.CENTER)).apply {
             add(runButton)
             add(editBacklogButton)
-            add(verifyButton)
-        }
-
-        val criteriaPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
-            border = IdeBorderFactory.createRoundedBorder()
-            val titlePanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
-                border = JBUI.Borders.empty(5)
-                add(JBLabel("Acceptance Criteria").apply { font = JBUI.Fonts.label().asBold() }, BorderLayout.WEST)
-            }
-            add(titlePanel, BorderLayout.NORTH)
-            add(JBScrollPane(acceptanceCriteriaArea), BorderLayout.CENTER)
-            isVisible = project.service<OrchestratorSettings>().showAcceptanceCriteria
         }
 
         val logPanel = JBPanel<JBPanel<*>>(BorderLayout()).apply {
@@ -203,7 +181,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
 
         val topPanel = JBPanel<JBPanel<*>>(BorderLayout())
         topPanel.add(featureCard, BorderLayout.NORTH)
-        topPanel.add(criteriaPanel, BorderLayout.CENTER)
         topPanel.add(buttons, BorderLayout.SOUTH)
 
         val splitter = OnePixelSplitter(true)
@@ -217,13 +194,10 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         nextButton.addActionListener { controller.nextFeature() }
         runButton.addActionListener { controller.runNextFeature() }
         editBacklogButton.addActionListener { controller.createOrUpdateBacklog() }
-        verifyButton.addActionListener { controller.verifyNow() }
     }
 
     // Listener implementation
     override fun onStateChanged(state: OrchestratorState) {
-        verifyButton.isEnabled = (state == OrchestratorState.AWAITING_AI || state == OrchestratorState.HANDOFF || state == OrchestratorState.FAILED)
-
         val canRun = (state == OrchestratorState.IDLE || state == OrchestratorState.FAILED || state == OrchestratorState.COMPLETED || state == OrchestratorState.AWAITING_AI)
         runButton.isEnabled = canRun && lastStatus == BacklogStatus.OK
     }
@@ -252,7 +226,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         when (status) {
             BacklogStatus.MISSING -> {
                 featureDesc.text = "No BACKLOG.md found in project root. Press Create Backlog to generate a template."
-                acceptanceCriteriaArea.text = ""
                 runButton.isVisible = true
                 runButton.isEnabled = false
                 editBacklogButton.isVisible = false // Hide the bottom one
@@ -270,7 +243,6 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
             BacklogStatus.NO_FEATURES -> {
                 featureName.text = "No Features"
                 featureDesc.text = "No features found in BACKLOG.md. Press Add Feature (+) to append a new feature."
-                acceptanceCriteriaArea.text = ""
                 runButton.isVisible = true
                 runButton.isEnabled = false
                 editBacklogButton.isVisible = false
@@ -325,7 +297,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         }
     }
 
-    override fun onFeaturePreview(feature: BacklogFeature?) {
+    override fun onFeatureSelected(feature: BacklogFeature?) {
         if (lastStatus != BacklogStatus.OK) return
         featureName.text = feature?.let { "${it.name}" } ?: "No feature selected"
         featureDesc.text = feature?.description?.let { truncate(it) } ?: ""
@@ -333,42 +305,7 @@ private class FeatureOrchestratorPanel(private val project: Project) : JBPanel<F
         editFeatureButton.isEnabled = feature != null
         removeFeatureButton.isEnabled = feature != null
         completeFeatureButton.isEnabled = feature != null
-
-        if (feature == null) {
-            acceptanceCriteriaArea.text = ""
-            return
-        }
-
-        val automatic = mutableListOf<String>()
-        val manual = mutableListOf<String>()
-
-        feature.acceptanceCriteria.forEach { c ->
-            when (c) {
-                is AcceptanceCriterion.FileExists ->
-                    automatic.add("- File exists: ${c.relativePath}")
-                is AcceptanceCriterion.CommandSucceeds ->
-                    automatic.add("- Command succeeds: ${c.command}")
-                is AcceptanceCriterion.NoTestsFail ->
-                    automatic.add("- No tests fail")
-                is AcceptanceCriterion.ManualVerification ->
-                    manual.add("- ${c.description}")
-            }
-        }
-
-        val sb = StringBuilder()
-        if (automatic.isNotEmpty()) {
-            sb.append("Automatic checks:\n")
-            automatic.forEach { sb.append(it).append("\n") }
-        }
-        if (manual.isNotEmpty()) {
-            if (sb.isNotEmpty()) sb.append("\n")
-            sb.append("Manual checks:\n")
-            manual.forEach { sb.append(it).append("\n") }
-        }
-
-        acceptanceCriteriaArea.text = sb.toString().trimEnd()
     }
-
 
     override fun onPromptGenerated(prompt: String) {
 

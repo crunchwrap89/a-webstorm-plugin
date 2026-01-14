@@ -1,6 +1,5 @@
 package com.github.crunchwrap89.featureorchestrator.featureorchestrator.core
 
-import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogFeature
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Section
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Skill
@@ -43,27 +42,5 @@ object PromptGenerator {
         appendIfPresent(Section.CONTEXT, "Context")
 
         return sb.toString().trimEnd()
-    }
-
-    fun generateFailurePrompt(feature: BacklogFeature, failures: List<FailureDetail>): String {
-        val sb = StringBuilder()
-        sb.appendLine("The implementation of feature '${feature.name}' failed verification.")
-        sb.appendLine()
-        sb.appendLine("The following acceptance criteria failed:")
-        failures.forEach { f ->
-            sb.appendLine("- Criterion: ${describe(f.criterion)}")
-            sb.appendLine("  Error Details:")
-            sb.appendLine(f.message.prependIndent("    "))
-            sb.appendLine()
-        }
-        sb.appendLine("Please fix the implementation to satisfy these criteria.")
-        return sb.toString()
-    }
-
-    private fun describe(c: AcceptanceCriterion): String = when (c) {
-        is AcceptanceCriterion.FileExists -> "File exists: ${c.relativePath}"
-        is AcceptanceCriterion.CommandSucceeds -> "Command succeeds: ${c.command}"
-        is AcceptanceCriterion.NoTestsFail -> "No tests fail"
-        is AcceptanceCriterion.ManualVerification -> "Manual verification: ${c.description}"
     }
 }

@@ -27,15 +27,8 @@ import com.intellij.openapi.wm.ToolWindowManager
 
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.BacklogStatus
 import com.intellij.openapi.fileEditor.FileEditorManager
-import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.AcceptanceCriterion
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Skill
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.skills.SkillService
-import com.intellij.openapi.ui.DialogWrapper
-import com.intellij.ui.components.JBCheckBox
-import javax.swing.BoxLayout
-import javax.swing.JComponent
-import javax.swing.JLabel
-import javax.swing.JPanel
 
 class OrchestratorController(private val project: Project, private val listener: Listener) : Disposable {
     private val settings = project.service<OrchestratorSettings>()
@@ -85,7 +78,7 @@ class OrchestratorController(private val project: Project, private val listener:
         fun onStateChanged(state: OrchestratorState)
         fun onLog(message: String)
         fun onClearLog()
-        fun onFeaturePreview(feature: BacklogFeature?)
+        fun onFeatureSelected(feature: BacklogFeature?)
         fun onPromptGenerated(prompt: String)
         fun onClearPrompt()
         fun onCompletion(success: Boolean)
@@ -136,7 +129,6 @@ class OrchestratorController(private val project: Project, private val listener:
         if (backlogFile == null) {
             setState(OrchestratorState.IDLE)
             listener.onBacklogStatusChanged(BacklogStatus.MISSING)
-            listener.onFeaturePreview(null)
             listener.onNavigationStateChanged(false, false)
             return
         }
@@ -144,7 +136,6 @@ class OrchestratorController(private val project: Project, private val listener:
         if (backlog == null) {
             setState(OrchestratorState.IDLE)
             listener.onBacklogStatusChanged(BacklogStatus.NO_FEATURES)
-            listener.onFeaturePreview(null)
             listener.onNavigationStateChanged(false, false)
             return
         }
@@ -159,7 +150,6 @@ class OrchestratorController(private val project: Project, private val listener:
             setState(OrchestratorState.IDLE)
             currentFeatureIndex = 0
             listener.onBacklogStatusChanged(BacklogStatus.NO_FEATURES)
-            listener.onFeaturePreview(null)
             listener.onNavigationStateChanged(false, false)
             return
         }
@@ -174,20 +164,36 @@ class OrchestratorController(private val project: Project, private val listener:
         }
 
         listener.onBacklogStatusChanged(BacklogStatus.OK)
-        updateFeaturePreview()
+        updateNavigation()
+    }
+
+    private fun updateNavigation() {
+        listener.onNavigationStateChanged(
+            hasPrevious = currentFeatureIndex > 0,
+            hasNext = currentFeatureIndex < availableFeatures.size - 1
+        )
+        updateFeatureSelection()
+    }
+
+    private fun updateFeatureSelection() {
+        if (availableFeatures.isNotEmpty() && currentFeatureIndex in availableFeatures.indices) {
+            listener.onFeatureSelected(availableFeatures[currentFeatureIndex])
+        } else {
+            listener.onFeatureSelected(null)
+        }
     }
 
     fun nextFeature() {
         if (currentFeatureIndex < availableFeatures.size - 1) {
             currentFeatureIndex++
-            updateFeaturePreview()
+            updateNavigation()
         }
     }
 
     fun previousFeature() {
         if (currentFeatureIndex > 0) {
             currentFeatureIndex--
-            updateFeaturePreview()
+            updateNavigation()
         }
     }
 
@@ -262,6 +268,10 @@ class OrchestratorController(private val project: Project, private val listener:
                 val ok = backlogService.markCompletedOrRemove(feature, behavior)
                 if (ok) {
                     info("Feature '${feature.name}' marked as completed.")
+                    stopMonitoring()
+                    setState(OrchestratorState.COMPLETED)
+                    listener.onCompletion(true)
+                    listener.onClearPrompt()
                     validateBacklog()
                 } else {
                     warn("Failed to update backlog.md")
@@ -270,18 +280,6 @@ class OrchestratorController(private val project: Project, private val listener:
         }
     }
 
-    private fun updateFeaturePreview() {
-        if (availableFeatures.isNotEmpty() && currentFeatureIndex in availableFeatures.indices) {
-            listener.onFeaturePreview(availableFeatures[currentFeatureIndex])
-            listener.onNavigationStateChanged(
-                hasPrevious = currentFeatureIndex > 0,
-                hasNext = currentFeatureIndex < availableFeatures.size - 1
-            )
-        } else {
-            listener.onFeaturePreview(null)
-            listener.onNavigationStateChanged(false, false)
-        }
-    }
 
     fun createOrUpdateBacklog() {
         val backlogFile = backlogService.backlogFile()
@@ -315,7 +313,7 @@ class OrchestratorController(private val project: Project, private val listener:
             val newIndex = availableFeatures.indexOfFirst { it.name == oldFeatureName }
             if (newIndex != -1) {
                 currentFeatureIndex = newIndex
-                updateFeaturePreview()
+                updateNavigation()
             }
         }
 
@@ -325,10 +323,6 @@ class OrchestratorController(private val project: Project, private val listener:
         val prompt = PromptGenerator.generate(feature, selectedSkills)
         listener.onPromptGenerated(prompt)
         handoffPrompt(prompt)
-
-        if (settings.showNotificationAfterHandoff) {
-            Messages.showInfoMessage(project, "Prompt prepared. Paste it into your AI tool (Copilot Chat or JetBrains AI Assistant).", "Feature Orchestrator")
-        }
 
         // If we are already awaiting AI for the same feature, just re-handoff and return
         if (state == OrchestratorState.AWAITING_AI && session?.feature?.name == feature.name) {
@@ -340,82 +334,6 @@ class OrchestratorController(private val project: Project, private val listener:
         setState(OrchestratorState.AWAITING_AI)
     }
 
-    fun verifyNow() {
-        // Ensure we have the latest backlog state
-        validateBacklog()
-
-        var s = session ?: return
-
-        // Refresh feature from availableFeatures to get latest acceptance criteria
-        val currentFeature = availableFeatures.find { it.name == s.feature.name }
-        if (currentFeature != null && currentFeature != s.feature) {
-            s = s.copy(feature = currentFeature)
-            session = s
-        }
-
-        setState(OrchestratorState.VERIFYING)
-        if (s.feature.acceptanceCriteria.isEmpty()) {
-            val ok = Messages.showYesNoDialog(project, "No Acceptance Criteria found. Mark feature as completed?", "Feature Orchestrator", null) == Messages.YES
-            if (ok) completeSuccess() else setFailed("User cancelled completion without criteria.")
-            return
-        }
-
-        ProgressManager.getInstance().run(object : Task.Backgroundable(project, "Verifying feature", true) {
-            override fun run(indicator: ProgressIndicator) {
-                try {
-                    ApplicationManager.getApplication().invokeLater { info("Verifying implementation...") }
-                    val result = AcceptanceVerifier.verify(project, s.feature.acceptanceCriteria)
-                    ApplicationManager.getApplication().invokeLater {
-                        result.details.forEach { log(it) }
-                        if (result.success) {
-                            if (result.manualVerifications.isNotEmpty()) {
-                                val dialog = ManualVerificationDialog(project, result.manualVerifications)
-                                if (dialog.showAndGet()) {
-                                    val unfulfilled = dialog.getUnfulfilledCriteria()
-                                    if (unfulfilled.isEmpty()) {
-                                        info("Manual verification confirmed.")
-                                        info("Verification successfully completed.")
-                                        completeSuccess()
-                                    } else {
-                                        info("Manual verification incomplete.")
-                                        val manualFailures = unfulfilled.map {
-                                            FailureDetail(it, "User indicated this manual verification was not fulfilled.")
-                                        }
-                                        handleVerificationFailure(s.feature, result.failures + manualFailures)
-                                    }
-                                } else {
-                                    info("Manual verification cancelled.")
-                                    setState(OrchestratorState.AWAITING_AI)
-                                }
-                            } else {
-                                info("Verification successfully completed.")
-                                completeSuccess()
-                            }
-                        } else {
-                            handleVerificationFailure(s.feature, result.failures)
-                        }
-                    }
-                } catch (e: Exception) {
-                    ApplicationManager.getApplication().invokeLater {
-                        log("ERROR: Verification failed with exception: ${e.message}")
-                        setFailed("Verification exception: ${e.message}")
-                    }
-                }
-            }
-        })
-    }
-
-    private fun handleVerificationFailure(feature: BacklogFeature, failures: List<FailureDetail>) {
-        info("Verification failed.")
-        val prompt = PromptGenerator.generateFailurePrompt(feature, failures)
-        listener.onPromptGenerated(prompt)
-        handoffPrompt(prompt)
-
-        if (settings.showNotificationAfterHandoff) {
-            Messages.showInfoMessage(project, "Verification failed. Failure prompt prepared. Paste it into your AI tool to fix the issues.", "Feature Orchestrator")
-        }
-        setState(OrchestratorState.AWAITING_AI)
-    }
 
     private fun handoffPrompt(prompt: String) {
         // Always copy to clipboard as a fallback/convenience
@@ -424,11 +342,6 @@ class OrchestratorController(private val project: Project, private val listener:
         when (settings.promptHandoffBehavior) {
             PromptHandoffBehavior.COPY_TO_CLIPBOARD -> {
                 info("Prompt copied to clipboard.")
-            }
-            PromptHandoffBehavior.AUTO_COPILOT -> {
-                info("Prompt copied to clipboard. Opening Copilot...")
-                // Try common IDs for Copilot Chat
-                openToolWindow("Github Copilot Chat") || openToolWindow("Copilot Chat")
             }
             PromptHandoffBehavior.AUTO_AI_ASSISTANT -> {
                 info("Prompt copied to clipboard. Opening AI Assistant...")
@@ -453,7 +366,7 @@ class OrchestratorController(private val project: Project, private val listener:
         stopMonitoring()
         session = null
         setState(OrchestratorState.IDLE)
-        listener.onFeaturePreview(null)
+        listener.onFeatureSelected(null)
     }
 
     private fun completeSuccess() {
@@ -468,7 +381,7 @@ class OrchestratorController(private val project: Project, private val listener:
         setState(OrchestratorState.COMPLETED)
         info("Feature '${s.feature.name}' marked as completed.")
         listener.onCompletion(true)
-        listener.onFeaturePreview(null)
+        listener.onFeatureSelected(null)
         listener.onClearPrompt()
     }
 
@@ -521,24 +434,4 @@ class OrchestratorController(private val project: Project, private val listener:
     }
 }
 
-private class ManualVerificationDialog(project: Project, val criteria: List<AcceptanceCriterion.ManualVerification>) : DialogWrapper(project) {
-    private val checkboxes = criteria.map { JBCheckBox(it.description) }
-
-    init {
-        title = "Manual Verification"
-        init()
-    }
-
-    override fun createCenterPanel(): JComponent {
-        val panel = JPanel()
-        panel.layout = BoxLayout(panel, BoxLayout.Y_AXIS)
-        panel.add(JLabel("Please confirm the following criteria are fulfilled:"))
-        checkboxes.forEach { panel.add(it) }
-        return panel
-    }
-
-    fun getUnfulfilledCriteria(): List<AcceptanceCriterion.ManualVerification> {
-        return criteria.zip(checkboxes).filter { !it.second.isSelected }.map { it.first }
-    }
-}
 

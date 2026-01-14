@@ -78,7 +78,6 @@ class BacklogServiceTest : BasePlatformTestCase() {
             checked = false,
             description = "Desc",
             optionalSections = emptyMap(),
-            acceptanceCriteria = emptyList(),
             rawBlock = """
             ## Feature name
             [ ] Feature 1
@@ -115,7 +114,6 @@ class BacklogServiceTest : BasePlatformTestCase() {
             checked = false,
             description = "Desc",
             optionalSections = emptyMap(),
-            acceptanceCriteria = emptyList(),
             rawBlock = """
             ## Feature name
             [ ] Feature 1
@@ -152,7 +150,6 @@ class BacklogServiceTest : BasePlatformTestCase() {
             checked = false,
             description = "Desc",
             optionalSections = emptyMap(),
-            acceptanceCriteria = emptyList(),
             rawBlock = """
             ## Feature name
             [ ] Feature 1

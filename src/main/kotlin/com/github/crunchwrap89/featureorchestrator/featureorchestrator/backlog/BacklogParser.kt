@@ -71,7 +71,6 @@ object BacklogParser {
             }
 
             val optionalSections = mutableMapOf<Section, String>()
-            val acceptanceCriteria = mutableListOf<AcceptanceCriterion>()
 
             while (i < lines.size && !featureHeaderRegex.matches(lines[i]) && !separatorRegex.matches(lines[i])) {
                 if (!sectionHeaderRegex.matches(lines[i])) { i++; continue }
@@ -86,12 +85,15 @@ object BacklogParser {
                 when (secTitle.lowercase()) {
                     "requirements" -> optionalSections[Section.REQUIREMENTS] = body
                     "out of scope", "out-of-scope", "out_of_scope" -> optionalSections[Section.OUT_OF_SCOPE] = body
-                    "acceptance criteria", "acceptance-criteria", "acceptance_criteria" -> {
-                        optionalSections[Section.ACCEPTANCE_CRITERIA] = body
-                        acceptanceCriteria += parseCriteria(body, warnings)
-                    }
                     "notes" -> optionalSections[Section.NOTES] = body
                     "context" -> optionalSections[Section.CONTEXT] = body
+                    "acceptance criteria", "acceptance-criteria", "acceptance_criteria" -> {
+                        // Acceptance Criteria section is no longer used for verification, 
+                        // but we can still keep it in optionalSections if we want to show it as text,
+                        // but the instructions say to remove "The Preview window of Acceptance Criterias".
+                        // However, keeping it as a generic section might be okay? 
+                        // No, Section.ACCEPTANCE_CRITERIA was also removed from enum.
+                    }
                     else -> {
                         warnings += warning(blockStart, "Unknown section '### $secTitle' in feature '$name'. Ignored.")
                     }
@@ -106,7 +108,6 @@ object BacklogParser {
                 checked = checked,
                 description = description,
                 optionalSections = optionalSections.toMap(),
-                acceptanceCriteria = acceptanceCriteria.toList(),
                 rawBlock = rawBlock,
                 blockStartOffset = startOffset(text, blockStart),
                 blockEndOffset = endOffset(text, blockEnd),
@@ -114,38 +115,6 @@ object BacklogParser {
         }
 
         return Backlog(features, warnings)
-    }
-
-    private fun parseCriteria(body: String, warnings: MutableList<String>): List<AcceptanceCriterion> {
-        val list = mutableListOf<AcceptanceCriterion>()
-        body.lines().forEachIndexed { idx, line ->
-            val trimmed = line.trim()
-            if (trimmed.isBlank()) return@forEachIndexed
-            if (trimmed.startsWith("---")) return@forEachIndexed // Ignore separators
-            when {
-                trimmed.startsWith("• ") || trimmed.startsWith("- ") || trimmed.startsWith("* ") -> {
-                    val spec = trimmed.drop(2).trim()
-                    when {
-                        spec.startsWith("File exists:", ignoreCase = true) -> {
-                            list += AcceptanceCriterion.FileExists(spec.substringAfter(":").trim())
-                        }
-                        spec.startsWith("Command succeeds:", ignoreCase = true) -> {
-                            list += AcceptanceCriterion.CommandSucceeds(spec.substringAfter(":").trim())
-                        }
-                        spec.equals("No tests fail", ignoreCase = true) -> {
-                            list += AcceptanceCriterion.NoTestsFail
-                        }
-                        else -> {
-                            list += AcceptanceCriterion.ManualVerification(spec)
-                        }
-                    }
-                }
-                else -> {
-                    // Ignore other lines without warning
-                }
-            }
-        }
-        return list
     }
 
     private fun startOffset(text: String, lineIndex: Int): Int {

@@ -6,6 +6,9 @@ import com.github.crunchwrap89.featureorchestrator.featureorchestrator.model.Orc
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.CompletionBehavior
 import com.github.crunchwrap89.featureorchestrator.featureorchestrator.settings.OrchestratorSettings
 import com.intellij.openapi.components.service
+import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.ui.TestDialog
+import com.intellij.openapi.ui.TestDialogManager
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
 import com.intellij.util.ui.UIUtil
 import java.util.concurrent.atomic.AtomicReference
@@ -17,8 +20,7 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
 
     override fun setUp() {
         super.setUp()
-        val settings = project.service<OrchestratorSettings>()
-        settings.showNotificationAfterHandoff = false
+        TestDialogManager.setTestDialog(TestDialog.OK)
 
         val listener = object : OrchestratorController.Listener {
             override fun onStateChanged(state: OrchestratorState) {
@@ -28,7 +30,7 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
             }
             override fun onClearLog() {}
             override fun onClearPrompt() {}
-            override fun onFeaturePreview(feature: BacklogFeature?) {}
+            override fun onFeatureSelected(feature: BacklogFeature?) {}
             override fun onPromptGenerated(prompt: String) {}
             override fun onCompletion(success: Boolean) {}
             override fun onBacklogStatusChanged(status: BacklogStatus) {}
@@ -43,38 +45,6 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
         super.tearDown()
     }
 
-    fun testVerifyRetry() {
-        // Create backlog.md
-        myFixture.addFileToProject("backlog.md", """
-            # Backlog
-            ## Feature name
-            [ ] Test Feature
-            ### Description
-            Test description
-            ### Acceptance Criteria
-            - File exists: test.txt
-        """.trimIndent())
-
-        // Run next feature
-        controller.runNextFeature()
-        assertEquals(OrchestratorState.AWAITING_AI, lastState.get())
-
-        // Verify - should fail because test.txt does not exist
-        controller.verifyNow()
-        waitForState(OrchestratorState.AWAITING_AI)
-        assertEquals(OrchestratorState.AWAITING_AI, lastState.get())
-
-        // Create test.txt
-        myFixture.addFileToProject("test.txt", "content")
-        Thread.sleep(500)
-        com.intellij.openapi.vfs.LocalFileSystem.getInstance().refresh(true)
-
-        // Verify again - should succeed
-        controller.verifyNow()
-        waitForState(OrchestratorState.COMPLETED)
-        assertEquals(OrchestratorState.COMPLETED, lastState.get())
-    }
-
     fun testMoveToCompleted() {
         val settings = project.service<OrchestratorSettings>()
         settings.completionBehavior = CompletionBehavior.MOVE_TO_COMPLETED
@@ -86,8 +56,6 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
             [ ] Feature 1
             ### Description
             Desc 1
-            ### Acceptance Criteria
-            - File exists: f1.txt
 
             ## Feature name
             [ ] Feature 2
@@ -95,14 +63,12 @@ class OrchestratorControllerTest : BasePlatformTestCase() {
             Desc 2
         """.trimIndent())
 
-        myFixture.addFileToProject("f1.txt", "")
-
         // Run next feature (Feature 1)
         controller.runNextFeature()
         assertEquals(OrchestratorState.AWAITING_AI, lastState.get())
 
-        // Verify
-        controller.verifyNow()
+        // Complete manually (since verification is gone)
+        controller.completeFeature()
         waitForState(OrchestratorState.COMPLETED)
         assertEquals(OrchestratorState.COMPLETED, lastState.get())
 
